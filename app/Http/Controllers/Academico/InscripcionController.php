@@ -70,55 +70,54 @@ class InscripcionController extends Controller
     /**
      * Guardar inscripción.
      */
-public function store(Request $request)
-{
-    $request->validate([
-        'estudiante_id' => 'required|exists:estudiantes,id',
-        'curso_id'      => 'required|exists:cursos,id',
-        'profesor_id'   => 'required|exists:profesors,id', // Se usa para filtrar clases
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'estudiante_id' => 'required|exists:estudiantes,id',
+            'curso_id'      => 'required|exists:cursos,id',
+            'profesor_id'   => 'required|exists:profesors,id', // Se usa para filtrar clases
+        ]);
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        // 1. Registro en la tabla de progreso académico (Sin profesor_id)
-        DB::table('estudiante_curso')->updateOrInsert(
-            ['estudiante_id' => $request->estudiante_id, 'curso_id' => $request->curso_id],
-            [
-                'fecha_inscripcion' => now(),
-                'horas_realizadas'  => 0,
-                'estado'            => 'activo',
-                'updated_at'        => now(),
-            ]
-        );
+            // 1. Registro en la tabla de progreso académico (Sin profesor_id)
+            DB::table('estudiante_curso')->updateOrInsert(
+                ['estudiante_id' => $request->estudiante_id, 'curso_id' => $request->curso_id],
+                [
+                    'fecha_inscripcion' => now(),
+                    'horas_realizadas'  => 0,
+                    'estado'            => 'activo',
+                    'updated_at'        => now(),
+                ]
+            );
 
-        // 2. Obtener las clases específicas de ese profesor para ese curso
-        // Según tu migración, aquí sí es obligatorio el profesor_id
-        $clasesIds = DB::table('clases')
-            ->where('curso_id', 1)
-            ->where('profesor_id', $request->profesor_id)
-            ->pluck('id');
+            // 2. Obtener las clases específicas de ese profesor para ese curso
+            // Según tu migración, aquí sí es obligatorio el profesor_id
+            $clasesIds = DB::table('clases')
+                ->where('curso_id', 1)
+                ->where('profesor_id', $request->profesor_id)
+                ->pluck('id');
 
-        // 3. Vincular al estudiante con cada sesión/clase para la asistencia
-        if ($clasesIds->isNotEmpty()) {
-            foreach ($clasesIds as $claseId) {
-                DB::table('clase_estudiante')->updateOrInsert(
-                    ['clase_id' => $claseId, 'estudiante_id' => $request->estudiante_id],
-                    ['updated_at' => now(), 'created_at' => now()]
-                );
+            // 3. Vincular al estudiante con cada sesión/clase para la asistencia
+            if ($clasesIds->isNotEmpty()) {
+                foreach ($clasesIds as $claseId) {
+                    DB::table('clase_estudiante')->updateOrInsert(
+                        ['clase_id' => $claseId, 'estudiante_id' => $request->estudiante_id],
+                        ['updated_at' => now(), 'created_at' => now()]
+                    );
+                }
             }
+
+            DB::commit();
+            return redirect()->route('admin.inscripciones.index')
+                ->with('success', 'Inscripción y asignación de clases completada.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error en inscripción: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
         }
-
-        DB::commit();
-        return redirect()->route('admin.inscripciones.index')
-            ->with('success', 'Inscripción y asignación de clases completada.');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error("Error en inscripción: " . $e->getMessage());
-        return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
     }
-}
 
     /**
      * Inscripción masiva.
@@ -200,7 +199,11 @@ public function store(Request $request)
      */
     public function edit($id)
     {
-        $inscripcion = DB::table('estudiante_curso')->where('id', $id)->firstOrFail();
+        $inscripcion = DB::table('estudiante_curso')->where('id', $id)->first();
+
+        if (!$inscripcion) {
+            abort(404, 'La inscripción no fue encontrada.');
+        }
         $estudiante  = \App\Models\Estudiante::findOrFail($inscripcion->estudiante_id);
         $cursoActual = \App\Models\Curso::findOrFail($inscripcion->curso_id);
         $cursos      = \App\Models\Curso::orderBy('nombre')->get();
@@ -212,8 +215,12 @@ public function store(Request $request)
     {
         $request->validate(['curso_id' => 'required|exists:cursos,id']);
 
-        $inscripcion = DB::table('estudiante_curso')->where('id', $id)->firstOrFail();
+        $inscripcion = DB::table('estudiante_curso')->where('id', $id)->first();
 
+        if (!$inscripcion) {
+            abort(404, 'La inscripción no fue encontrada.');
+        }
+        
         $yaExiste = DB::table('estudiante_curso')
             ->where('estudiante_id', $inscripcion->estudiante_id)
             ->where('curso_id', $request->curso_id)
@@ -234,7 +241,7 @@ public function store(Request $request)
             ->with('success', 'Inscripción actualizada correctamente.');
     }
 
-        public function destroy($id)
+    public function destroy($id)
     {
         $inscripcion = DB::table('estudiante_curso')->where('id', $id)->first();
 

@@ -36,11 +36,23 @@
                                     <option value="">-- Seleccione un curso --</option>
                                     @foreach($cursos as $curso)
                                         <option value="{{ $curso->id }}" {{ old('curso_id') == $curso->id ? 'selected' : '' }}>
-                                            {{ $curso->codigo }} - {{ $curso->nombre }}
+                                            {{ $curso->codigo ?? '' }} - {{ $curso->nombre }}
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('curso_id')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Módulo (NUEVO) --}}
+                            <div class="form-group">
+                                <label for="modulo_id">Módulo (Opcional)</label>
+                                <select name="modulo_id" id="modulo_id" 
+                                        class="form-control @error('modulo_id') is-invalid @enderror">
+                                    <option value="">-- Seleccione un módulo --</option>
+                                </select>
+                                @error('modulo_id')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -111,7 +123,7 @@
                                           id="requisitos" 
                                           class="form-control" 
                                           rows="6"
-                                          placeholder="Lista los requisitos que debe cumplir la tarea...&#10;&#10;Ejemplo:&#10;- Estructura HTML5 semántica&#10;- Diseño responsive&#10;- Código limpio y comentado">{{ old('requisitos') }}</textarea>
+                                          placeholder="Lista los requisitos que debe cumplir la tarea...">{{ old('requisitos') }}</textarea>
                                 <small class="text-muted">Un requisito por línea</small>
                             </div>
 
@@ -122,7 +134,7 @@
                                           id="criterios_evaluacion" 
                                           class="form-control" 
                                           rows="6"
-                                          placeholder="Define cómo se evaluará la tarea...&#10;&#10;Ejemplo:&#10;Estructura HTML: 20 pts&#10;Diseño responsive: 25 pts&#10;Funcionalidad: 20 pts">{{ old('criterios_evaluacion') }}</textarea>
+                                          placeholder="Define cómo se evaluará la tarea...">{{ old('criterios_evaluacion') }}</textarea>
                             </div>
 
                         </div>
@@ -180,7 +192,7 @@
                                        id="fecha_apertura" 
                                        class="form-control" 
                                        value="{{ old('fecha_apertura') }}">
-                                <small class="text-muted">Dejar vacío para que esté disponible inmediatamente</small>
+                                <small class="text-muted">Dejar vacío para disponible inmediatamente</small>
                             </div>
 
                             {{-- Fecha de Entrega --}}
@@ -266,58 +278,18 @@
                             </h3>
                         </div>
                         <div class="card-body">
-                            
-                            {{-- Formato de Entrega --}}
                             <div class="form-group">
                                 <label for="formato_entrega">Tipo de Entrega <span class="text-danger">*</span></label>
                                 <select name="formato_entrega" 
                                         id="formato_entrega" 
                                         class="form-control" 
-                                        required
-                                        onchange="toggleFormatoConfig()">
+                                        required>
                                     <option value="archivo" {{ old('formato_entrega') == 'archivo' ? 'selected' : '' }}>Solo archivos</option>
                                     <option value="enlace" {{ old('formato_entrega') == 'enlace' ? 'selected' : '' }}>Solo enlace (URL)</option>
                                     <option value="texto" {{ old('formato_entrega') == 'texto' ? 'selected' : '' }}>Solo texto</option>
                                     <option value="ambos" {{ old('formato_entrega') == 'ambos' ? 'selected' : '' }}>Archivos y enlace</option>
                                 </select>
                             </div>
-
-                            {{-- Formatos Aceptados --}}
-                            <!-- <div class="form-group" id="div_formatos">
-                                <label for="formatos_aceptados">Formatos Aceptados</label>
-                                <input type="text" 
-                                       name="formatos_aceptados" 
-                                       id="formatos_aceptados" 
-                                       class="form-control" 
-                                       value="{{ old('formatos_aceptados', '.zip,.rar,.pdf') }}"
-                                       placeholder=".zip,.pdf,.docx">
-                                <small class="text-muted">Separados por comas</small>
-                            </div> -->
-
-                            {{-- Tamaño Máximo --}}
-                            <!-- <div class="form-group" id="div_tamanio">
-                                <label for="tamanio_maximo">Tamaño Máximo (MB)</label>
-                                <input type="number" 
-                                       name="tamanio_maximo" 
-                                       id="tamanio_maximo" 
-                                       class="form-control" 
-                                       value="{{ old('tamanio_maximo', 50) }}"
-                                       min="1">
-                            </div> -->
-
-                            {{-- Intentos Permitidos --}}
-                            <!-- <div class="form-group">
-                                <label for="intentos_permitidos">Intentos Permitidos <span class="text-danger">*</span></label>
-                                <input type="number" 
-                                       name="intentos_permitidos" 
-                                       id="intentos_permitidos" 
-                                       class="form-control" 
-                                       value="{{ old('intentos_permitidos', 1) }}"
-                                       min="1"
-                                       required>
-                                <small class="text-muted">Número de veces que puede entregar</small>
-                            </div> -->
-
                         </div>
                     </div>
 
@@ -338,43 +310,69 @@
                                 <label class="custom-control-label" for="visible">
                                     Visible para estudiantes</label>
                             </div>
-                            <small class="text-muted d-block mt-2">
-                                Si está desactivado, solo tú podrás ver la tarea
-                            </small>
                         </div>
-                    </div></div>
-        </div>
+                    </div>
 
-        {{-- Botones de Acción --}}
-        <div class="card">
-            <div class="card-footer">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-save"></i> Crear Tarea
-                </button>
-                <a href="{{ route('admin.profesor.tareas.index') }}" class="btn btn-secondary btn-lg">
-                    <i class="fas fa-times"></i> Cancelar
-                </a>
+                </div>
             </div>
-        </div>
 
-    </form>
+            {{-- Botones de Acción --}}
+            <div class="card">
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Crear Tarea
+                    </button>
+                    <a href="{{ route('admin.profesor.tareas.index') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </div>
 
-</div>
+        </form>
+
+    </div>
 @stop
+
 @section('css')
 <style>
 .custom-file-label::after {
-content: "Buscar";
+    content: "Buscar";
 }
 </style>
 @stop
+
 @section('js')
 <script>
-// Preview de archivos seleccionados
-document.getElementById('documentos').addEventListener('change', function(e) {
-const preview = document.getElementById('preview-documentos');
-preview.innerHTML = '';
-if (this.files.length > 0) {
+    const cursosData = @json($cursos);
+    const oldModuloId = "{{ old('modulo_id') }}";
+
+    function cargarModulos(cursoId, selectedModuloId = null) {
+        const moduloSelect = document.getElementById('modulo_id');
+        moduloSelect.innerHTML = '<option value="">-- Seleccione un módulo --</option>';
+
+        const curso = cursosData.find(c => c.id == cursoId);
+        if (curso && curso.modulos && curso.modulos.length > 0) {
+            curso.modulos.forEach(mod => {
+                const option = document.createElement('option');
+                option.value = mod.id;
+                option.textContent = mod.nombre;
+                if (selectedModuloId && selectedModuloId == mod.id) {
+                    option.selected = true;
+                }
+                moduloSelect.appendChild(option);
+            });
+        }
+    }
+
+    document.getElementById('curso_id').addEventListener('change', function() {
+        cargarModulos(this.value);
+    });
+
+    // Preview de archivos
+    document.getElementById('documentos').addEventListener('change', function(e) {
+        const preview = document.getElementById('preview-documentos');
+        preview.innerHTML = '';
+        if (this.files.length > 0) {
             preview.innerHTML = '<strong>Archivos seleccionados:</strong><ul class="mt-2">';
             for (let i = 0; i < this.files.length; i++) {
                 preview.innerHTML += `<li>${this.files[i].name} (${(this.files[i].size / 1024 / 1024).toFixed(2)} MB)</li>`;
@@ -383,7 +381,6 @@ if (this.files.length > 0) {
         }
     });
 
-    // Actualizar label del input file
     document.querySelector('.custom-file-input').addEventListener('change', function(e) {
         const fileName = e.target.files.length > 1 
             ? `${e.target.files.length} archivos seleccionados` 
@@ -392,52 +389,18 @@ if (this.files.length > 0) {
         e.target.nextElementSibling.innerText = fileName;
     });
 
-    // Toggle penalización
     function togglePenalizacion() {
         const checkbox = document.getElementById('permite_entregas_tardias');
         const div = document.getElementById('div_penalizacion');
         div.style.display = checkbox.checked ? 'block' : 'none';
     }
 
-    // Toggle configuración de formato
-    function toggleFormatoConfig() {
-        const select = document.getElementById('formato_entrega');
-        const divFormatos = document.getElementById('div_formatos');
-        const divTamanio = document.getElementById('div_tamanio');
-        
-        if (select.value === 'archivo' || select.value === 'ambos') {
-            divFormatos.style.display = 'block';
-            divTamanio.style.display = 'block';
-        } else {
-            divFormatos.style.display = 'none';
-            divTamanio.style.display = 'none';
-        }
-    }
-
-    // Ejecutar al cargar
     document.addEventListener('DOMContentLoaded', function() {
         togglePenalizacion();
-        toggleFormatoConfig();
+        const cursoIdInicial = document.getElementById('curso_id').value;
+        if (cursoIdInicial) {
+            cargarModulos(cursoIdInicial, oldModuloId);
+        }
     });
 </script>
 @stop
-<!-- ---
-
-## 🛣️ **4. RUTAS**
-```php
-// routes/admin.php o routes/web.php
-
-Route::middleware(['auth', 'role:profesor'])->prefix('profesor')->name('profesor.')->group(function () {
-    
-    // Tareas
-    Route::resource('tareas', TareaProfesorController::class);
-    
-    // Eliminar documento de tarea
-    Route::delete('tareas/documentos/{documento}', [TareaProfesorController::class, 'eliminarDocumento'])
-        ->name('tareas.documentos.destroy');
-});
-```
-
----
-
-**¿Necesitas que cree la vista de detalle de tarea (show) o el formulario de edición?** -->

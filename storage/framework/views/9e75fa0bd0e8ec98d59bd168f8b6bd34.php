@@ -41,12 +41,38 @@ unset($__errorArgs, $__bag); ?>"
                                     <option value="">-- Seleccione un curso --</option>
                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $cursos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $curso): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <option value="<?php echo e($curso->id); ?>" <?php echo e(old('curso_id') == $curso->id ? 'selected' : ''); ?>>
-                                            <?php echo e($curso->codigo); ?> - <?php echo e($curso->nombre); ?>
+                                            <?php echo e($curso->codigo ?? ''); ?> - <?php echo e($curso->nombre); ?>
 
                                         </option>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                 </select>
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['curso_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+
+                            
+                            <div class="form-group">
+                                <label for="modulo_id">Módulo (Opcional)</label>
+                                <select name="modulo_id" id="modulo_id" 
+                                        class="form-control <?php $__errorArgs = ['modulo_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                                    <option value="">-- Seleccione un módulo --</option>
+                                </select>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['modulo_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -166,7 +192,7 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                           id="requisitos" 
                                           class="form-control" 
                                           rows="6"
-                                          placeholder="Lista los requisitos que debe cumplir la tarea...&#10;&#10;Ejemplo:&#10;- Estructura HTML5 semántica&#10;- Diseño responsive&#10;- Código limpio y comentado"><?php echo e(old('requisitos')); ?></textarea>
+                                          placeholder="Lista los requisitos que debe cumplir la tarea..."><?php echo e(old('requisitos')); ?></textarea>
                                 <small class="text-muted">Un requisito por línea</small>
                             </div>
 
@@ -177,7 +203,7 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                           id="criterios_evaluacion" 
                                           class="form-control" 
                                           rows="6"
-                                          placeholder="Define cómo se evaluará la tarea...&#10;&#10;Ejemplo:&#10;Estructura HTML: 20 pts&#10;Diseño responsive: 25 pts&#10;Funcionalidad: 20 pts"><?php echo e(old('criterios_evaluacion')); ?></textarea>
+                                          placeholder="Define cómo se evaluará la tarea..."><?php echo e(old('criterios_evaluacion')); ?></textarea>
                             </div>
 
                         </div>
@@ -235,7 +261,7 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                        id="fecha_apertura" 
                                        class="form-control" 
                                        value="<?php echo e(old('fecha_apertura')); ?>">
-                                <small class="text-muted">Dejar vacío para que esté disponible inmediatamente</small>
+                                <small class="text-muted">Dejar vacío para disponible inmediatamente</small>
                             </div>
 
                             
@@ -350,58 +376,18 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                             </h3>
                         </div>
                         <div class="card-body">
-                            
-                            
                             <div class="form-group">
                                 <label for="formato_entrega">Tipo de Entrega <span class="text-danger">*</span></label>
                                 <select name="formato_entrega" 
                                         id="formato_entrega" 
                                         class="form-control" 
-                                        required
-                                        onchange="toggleFormatoConfig()">
+                                        required>
                                     <option value="archivo" <?php echo e(old('formato_entrega') == 'archivo' ? 'selected' : ''); ?>>Solo archivos</option>
                                     <option value="enlace" <?php echo e(old('formato_entrega') == 'enlace' ? 'selected' : ''); ?>>Solo enlace (URL)</option>
                                     <option value="texto" <?php echo e(old('formato_entrega') == 'texto' ? 'selected' : ''); ?>>Solo texto</option>
                                     <option value="ambos" <?php echo e(old('formato_entrega') == 'ambos' ? 'selected' : ''); ?>>Archivos y enlace</option>
                                 </select>
                             </div>
-
-                            
-                            <!-- <div class="form-group" id="div_formatos">
-                                <label for="formatos_aceptados">Formatos Aceptados</label>
-                                <input type="text" 
-                                       name="formatos_aceptados" 
-                                       id="formatos_aceptados" 
-                                       class="form-control" 
-                                       value="<?php echo e(old('formatos_aceptados', '.zip,.rar,.pdf')); ?>"
-                                       placeholder=".zip,.pdf,.docx">
-                                <small class="text-muted">Separados por comas</small>
-                            </div> -->
-
-                            
-                            <!-- <div class="form-group" id="div_tamanio">
-                                <label for="tamanio_maximo">Tamaño Máximo (MB)</label>
-                                <input type="number" 
-                                       name="tamanio_maximo" 
-                                       id="tamanio_maximo" 
-                                       class="form-control" 
-                                       value="<?php echo e(old('tamanio_maximo', 50)); ?>"
-                                       min="1">
-                            </div> -->
-
-                            
-                            <!-- <div class="form-group">
-                                <label for="intentos_permitidos">Intentos Permitidos <span class="text-danger">*</span></label>
-                                <input type="number" 
-                                       name="intentos_permitidos" 
-                                       id="intentos_permitidos" 
-                                       class="form-control" 
-                                       value="<?php echo e(old('intentos_permitidos', 1)); ?>"
-                                       min="1"
-                                       required>
-                                <small class="text-muted">Número de veces que puede entregar</small>
-                            </div> -->
-
                         </div>
                     </div>
 
@@ -422,43 +408,69 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                 <label class="custom-control-label" for="visible">
                                     Visible para estudiantes</label>
                             </div>
-                            <small class="text-muted d-block mt-2">
-                                Si está desactivado, solo tú podrás ver la tarea
-                            </small>
                         </div>
-                    </div></div>
-        </div>
+                    </div>
 
-        
-        <div class="card">
-            <div class="card-footer">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-save"></i> Crear Tarea
-                </button>
-                <a href="<?php echo e(route('admin.profesor.tareas.index')); ?>" class="btn btn-secondary btn-lg">
-                    <i class="fas fa-times"></i> Cancelar
-                </a>
+                </div>
             </div>
-        </div>
 
-    </form>
+            
+            <div class="card">
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Crear Tarea
+                    </button>
+                    <a href="<?php echo e(route('admin.profesor.tareas.index')); ?>" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </div>
 
-</div>
+        </form>
+
+    </div>
 <?php $__env->stopSection(); ?>
+
 <?php $__env->startSection('css'); ?>
 <style>
 .custom-file-label::after {
-content: "Buscar";
+    content: "Buscar";
 }
 </style>
 <?php $__env->stopSection(); ?>
+
 <?php $__env->startSection('js'); ?>
 <script>
-// Preview de archivos seleccionados
-document.getElementById('documentos').addEventListener('change', function(e) {
-const preview = document.getElementById('preview-documentos');
-preview.innerHTML = '';
-if (this.files.length > 0) {
+    const cursosData = <?php echo json_encode($cursos, 15, 512) ?>;
+    const oldModuloId = "<?php echo e(old('modulo_id')); ?>";
+
+    function cargarModulos(cursoId, selectedModuloId = null) {
+        const moduloSelect = document.getElementById('modulo_id');
+        moduloSelect.innerHTML = '<option value="">-- Seleccione un módulo --</option>';
+
+        const curso = cursosData.find(c => c.id == cursoId);
+        if (curso && curso.modulos && curso.modulos.length > 0) {
+            curso.modulos.forEach(mod => {
+                const option = document.createElement('option');
+                option.value = mod.id;
+                option.textContent = mod.nombre;
+                if (selectedModuloId && selectedModuloId == mod.id) {
+                    option.selected = true;
+                }
+                moduloSelect.appendChild(option);
+            });
+        }
+    }
+
+    document.getElementById('curso_id').addEventListener('change', function() {
+        cargarModulos(this.value);
+    });
+
+    // Preview de archivos
+    document.getElementById('documentos').addEventListener('change', function(e) {
+        const preview = document.getElementById('preview-documentos');
+        preview.innerHTML = '';
+        if (this.files.length > 0) {
             preview.innerHTML = '<strong>Archivos seleccionados:</strong><ul class="mt-2">';
             for (let i = 0; i < this.files.length; i++) {
                 preview.innerHTML += `<li>${this.files[i].name} (${(this.files[i].size / 1024 / 1024).toFixed(2)} MB)</li>`;
@@ -467,7 +479,6 @@ if (this.files.length > 0) {
         }
     });
 
-    // Actualizar label del input file
     document.querySelector('.custom-file-input').addEventListener('change', function(e) {
         const fileName = e.target.files.length > 1 
             ? `${e.target.files.length} archivos seleccionados` 
@@ -476,53 +487,19 @@ if (this.files.length > 0) {
         e.target.nextElementSibling.innerText = fileName;
     });
 
-    // Toggle penalización
     function togglePenalizacion() {
         const checkbox = document.getElementById('permite_entregas_tardias');
         const div = document.getElementById('div_penalizacion');
         div.style.display = checkbox.checked ? 'block' : 'none';
     }
 
-    // Toggle configuración de formato
-    function toggleFormatoConfig() {
-        const select = document.getElementById('formato_entrega');
-        const divFormatos = document.getElementById('div_formatos');
-        const divTamanio = document.getElementById('div_tamanio');
-        
-        if (select.value === 'archivo' || select.value === 'ambos') {
-            divFormatos.style.display = 'block';
-            divTamanio.style.display = 'block';
-        } else {
-            divFormatos.style.display = 'none';
-            divTamanio.style.display = 'none';
-        }
-    }
-
-    // Ejecutar al cargar
     document.addEventListener('DOMContentLoaded', function() {
         togglePenalizacion();
-        toggleFormatoConfig();
+        const cursoIdInicial = document.getElementById('curso_id').value;
+        if (cursoIdInicial) {
+            cargarModulos(cursoIdInicial, oldModuloId);
+        }
     });
 </script>
 <?php $__env->stopSection(); ?>
-<!-- ---
-
-## 🛣️ **4. RUTAS**
-```php
-// routes/admin.php o routes/web.php
-
-Route::middleware(['auth', 'role:profesor'])->prefix('profesor')->name('profesor.')->group(function () {
-    
-    // Tareas
-    Route::resource('tareas', TareaProfesorController::class);
-    
-    // Eliminar documento de tarea
-    Route::delete('tareas/documentos/{documento}', [TareaProfesorController::class, 'eliminarDocumento'])
-        ->name('tareas.documentos.destroy');
-});
-```
-
----
-
-**¿Necesitas que cree la vista de detalle de tarea (show) o el formulario de edición?** -->
 <?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\Remanente\Canvas-Church60\resources\views/profesor/tareas/create.blade.php ENDPATH**/ ?>

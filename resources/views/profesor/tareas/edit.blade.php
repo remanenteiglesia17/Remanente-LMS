@@ -8,7 +8,6 @@
 
 @section('content')
 <div class="container-fluid">
-    {{-- Importante: El método debe ser PUT o PATCH para edición --}}
     <form action="{{ route('admin.profesor.tareas.update', $tarea->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -28,9 +27,17 @@
                             <select name="curso_id" id="curso_id" class="form-control @error('curso_id') is-invalid @enderror" required>
                                 @foreach($cursos as $curso)
                                     <option value="{{ $curso->id }}" {{ old('curso_id', $tarea->curso_id) == $curso->id ? 'selected' : '' }}>
-                                        {{ $curso->codigo }} - {{ $curso->nombre }}
+                                        {{ $curso->codigo ?? '' }} - {{ $curso->nombre }}
                                     </option>
                                 @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Módulo --}}
+                        <div class="form-group">
+                            <label for="modulo_id">Módulo (Opcional)</label>
+                            <select name="modulo_id" id="modulo_id" class="form-control @error('modulo_id') is-invalid @enderror">
+                                <option value="">-- Seleccione un módulo --</option>
                             </select>
                         </div>
 
@@ -71,7 +78,6 @@
                                         <span><i class="fas fa-file-alt"></i> {{ $doc->titulo }}</span>
                                         <div class="btn-group btn-group-sm">
                                             <a href="{{ asset('storage/'.$doc->archivo) }}" target="_blank" class="btn btn-info"><i class="fas fa-eye"></i></a>
-                                            {{-- Botón para eliminar el documento (requiere lógica en controlador) --}}
                                             <button type="button" class="btn btn-danger" onclick="eliminarArchivo({{ $doc->id }})"><i class="fas fa-trash"></i></button>
                                         </div>
                                     </li>
@@ -119,7 +125,7 @@
                     <div class="card-body">
                         <div class="form-group">
                             <label for="puntaje">Puntaje Máximo</label>
-                            <input type="number" name="puntaje" id="puntaje" class="form-control" value="{{ old('puntaje', $tarea->puntaje) }}" tabindex="1">
+                            <input type="number" name="puntaje" id="puntaje" class="form-control" value="{{ old('puntaje', $tarea->puntaje) }}">
                         </div> 
 
                         <div class="custom-control custom-checkbox mb-3">
@@ -146,7 +152,6 @@
     </form>
 </div>
 
-{{-- Formulario oculto para eliminar documentos --}}
 <form id="form-eliminar-doc" action="" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
@@ -155,6 +160,31 @@
 
 @section('js')
 <script>
+    const cursosData = @json($cursos);
+    const moduloActualId = "{{ old('modulo_id', $tarea->modulo_id) }}";
+
+    function cargarModulos(cursoId, selectedModuloId = null) {
+        const moduloSelect = document.getElementById('modulo_id');
+        moduloSelect.innerHTML = '<option value="">-- Seleccione un módulo --</option>';
+
+        const curso = cursosData.find(c => c.id == cursoId);
+        if (curso && curso.modulos && curso.modulos.length > 0) {
+            curso.modulos.forEach(mod => {
+                const option = document.createElement('option');
+                option.value = mod.id;
+                option.textContent = mod.nombre;
+                if (selectedModuloId && selectedModuloId == mod.id) {
+                    option.selected = true;
+                }
+                moduloSelect.appendChild(option);
+            });
+        }
+    }
+
+    document.getElementById('curso_id').addEventListener('change', function() {
+        cargarModulos(this.value);
+    });
+
     function togglePenalizacion() {
         const checkbox = document.getElementById('permite_entregas_tardias');
         const div = document.getElementById('div_penalizacion');
@@ -171,6 +201,10 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         togglePenalizacion();
+        const cursoIdInicial = document.getElementById('curso_id').value;
+        if (cursoIdInicial) {
+            cargarModulos(cursoIdInicial, moduloActualId);
+        }
     });
 </script>
 @stop

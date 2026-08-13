@@ -6,7 +6,6 @@
 
 <?php $__env->startSection('content'); ?>
 <div class="container-fluid">
-    
     <form action="<?php echo e(route('admin.profesor.tareas.update', $tarea->id)); ?>" method="POST" enctype="multipart/form-data">
         <?php echo csrf_field(); ?>
         <?php echo method_field('PUT'); ?>
@@ -33,10 +32,25 @@ endif;
 unset($__errorArgs, $__bag); ?>" required>
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $cursos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $curso): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($curso->id); ?>" <?php echo e(old('curso_id', $tarea->curso_id) == $curso->id ? 'selected' : ''); ?>>
-                                        <?php echo e($curso->codigo); ?> - <?php echo e($curso->nombre); ?>
+                                        <?php echo e($curso->codigo ?? ''); ?> - <?php echo e($curso->nombre); ?>
 
                                     </option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </select>
+                        </div>
+
+                        
+                        <div class="form-group">
+                            <label for="modulo_id">Módulo (Opcional)</label>
+                            <select name="modulo_id" id="modulo_id" class="form-control <?php $__errorArgs = ['modulo_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                                <option value="">-- Seleccione un módulo --</option>
                             </select>
                         </div>
 
@@ -98,7 +112,6 @@ unset($__errorArgs, $__bag); ?>" rows="5" required><?php echo e(old('descripcion
                                         <span><i class="fas fa-file-alt"></i> <?php echo e($doc->titulo); ?></span>
                                         <div class="btn-group btn-group-sm">
                                             <a href="<?php echo e(asset('storage/'.$doc->archivo)); ?>" target="_blank" class="btn btn-info"><i class="fas fa-eye"></i></a>
-                                            
                                             <button type="button" class="btn btn-danger" onclick="eliminarArchivo(<?php echo e($doc->id); ?>)"><i class="fas fa-trash"></i></button>
                                         </div>
                                     </li>
@@ -146,7 +159,7 @@ unset($__errorArgs, $__bag); ?>" rows="5" required><?php echo e(old('descripcion
                     <div class="card-body">
                         <div class="form-group">
                             <label for="puntaje">Puntaje Máximo</label>
-                            <input type="number" name="puntaje" id="puntaje" class="form-control" value="<?php echo e(old('puntaje', $tarea->puntaje)); ?>" tabindex="1">
+                            <input type="number" name="puntaje" id="puntaje" class="form-control" value="<?php echo e(old('puntaje', $tarea->puntaje)); ?>">
                         </div> 
 
                         <div class="custom-control custom-checkbox mb-3">
@@ -173,7 +186,6 @@ unset($__errorArgs, $__bag); ?>" rows="5" required><?php echo e(old('descripcion
     </form>
 </div>
 
-
 <form id="form-eliminar-doc" action="" method="POST" style="display: none;">
     <?php echo csrf_field(); ?>
     <?php echo method_field('DELETE'); ?>
@@ -182,6 +194,31 @@ unset($__errorArgs, $__bag); ?>" rows="5" required><?php echo e(old('descripcion
 
 <?php $__env->startSection('js'); ?>
 <script>
+    const cursosData = <?php echo json_encode($cursos, 15, 512) ?>;
+    const moduloActualId = "<?php echo e(old('modulo_id', $tarea->modulo_id)); ?>";
+
+    function cargarModulos(cursoId, selectedModuloId = null) {
+        const moduloSelect = document.getElementById('modulo_id');
+        moduloSelect.innerHTML = '<option value="">-- Seleccione un módulo --</option>';
+
+        const curso = cursosData.find(c => c.id == cursoId);
+        if (curso && curso.modulos && curso.modulos.length > 0) {
+            curso.modulos.forEach(mod => {
+                const option = document.createElement('option');
+                option.value = mod.id;
+                option.textContent = mod.nombre;
+                if (selectedModuloId && selectedModuloId == mod.id) {
+                    option.selected = true;
+                }
+                moduloSelect.appendChild(option);
+            });
+        }
+    }
+
+    document.getElementById('curso_id').addEventListener('change', function() {
+        cargarModulos(this.value);
+    });
+
     function togglePenalizacion() {
         const checkbox = document.getElementById('permite_entregas_tardias');
         const div = document.getElementById('div_penalizacion');
@@ -198,6 +235,10 @@ unset($__errorArgs, $__bag); ?>" rows="5" required><?php echo e(old('descripcion
 
     document.addEventListener('DOMContentLoaded', function() {
         togglePenalizacion();
+        const cursoIdInicial = document.getElementById('curso_id').value;
+        if (cursoIdInicial) {
+            cargarModulos(cursoIdInicial, moduloActualId);
+        }
     });
 </script>
 <?php $__env->stopSection(); ?>
