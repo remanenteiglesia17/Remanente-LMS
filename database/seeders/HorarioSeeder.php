@@ -3,96 +3,63 @@
 namespace Database\Seeders;
 
 use App\Models\Curso;
-use App\Models\Profesor;
 use App\Models\Horario;
-use App\Models\Estudiante;
 use App\Models\HorarioProfesorCurso;
-use App\Models\Secretaria;
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Profesor;
 use Illuminate\Database\Seeder;
 
 class HorarioSeeder extends Seeder
 {
+    /**
+     * Un profesor puede dictar varios cursos (y un curso puede tener varios
+     * profesores) a través de la tabla pivote horario_profesor_curso.
+     */
     public function run(): void
     {
-        /// CREACION DE HORARIOS
-        Horario::create([                //1
-            'dia' => 'LUNES',
-            'hora_inicio' => '6:00:00',
-            'hora_fin' => '19:00:00',
-            'profesor_id' => '2',
-        ]);
-        HorarioProfesorCurso::create([
-            'horario_id' => '1',
-            'curso_id' => '1',
-            'profesor_id' => '2',
-        ]);
-        // Horario::create([                //2
-        //     'dia' => 'MARTES',
-        //     'hora_inicio' => '6:00:00',
-        //     'hora_fin' => '18:00:00',
-        //     'profesor_id' => '2',
-        // ]);
-        // HorarioProfesorCurso::create([
-        //     'horario_id' => '2',
-        //     'curso_id' => '1',
-        //     'profesor_id' => '2',
-        // ]);
-        // Horario::create([               //3
-        //     'dia' => 'MIERCOLES',
-        //     'hora_inicio' => '6:00:00',
-        //     'hora_fin' => '20:00:00',
-        //     'profesor_id' => '1',
-        // ]);
-        // HorarioProfesorCurso::create([
-        //     'horario_id' => '3',
-        //     'curso_id' => '2',
-        //     'profesor_id' => '1',
-        // ]);
-        // Horario::create([               //4
-        //     'dia' => 'JUEVES',
-        //     'hora_inicio' => '6:00:00',
-        //     'hora_fin' => '14:00:00',
-        //     'profesor_id' => '3',
-        // ]);
-        // HorarioProfesorCurso::create([
-        //     'horario_id' => '4',
-        //     'curso_id' => '3',
-        //     'profesor_id' => '3',
-        // ]);
-        // Horario::create([               //5
-        //     'dia' => 'JUEVES',
-        //     'hora_inicio' => '6:00:00',
-        //     'hora_fin' => '14:00:00',
-        //     'profesor_id' => '1',
-        // ]);
-        // HorarioProfesorCurso::create([
-        //     'horario_id' => '5',
-        //     'curso_id' => '1',
-        //     'profesor_id' => '1',
-        // ]);
-        // Horario::create([
-        //     'dia' => 'VIERNES',           //6
-        //     'hora_inicio' => '6:00:00',
-        //     'hora_fin' => '20:00:00',
-        //     'profesor_id' => '1',
-        // ]);
-        // HorarioProfesorCurso::create([
-        //     'horario_id' => '6',
-        //     'curso_id' => '1',
-        //     'profesor_id' => '1',
-        // ]);
-        // Horario::create([
-        //     'dia' => 'SABADO',              //7
-        //     'hora_inicio' => '6:00:00',
-        //     'hora_fin' => '20:00:00',
-        //     'profesor_id' => '3',
-        // ]);
-        // HorarioProfesorCurso::create([
-        //     'horario_id' => '7',
-        //     'curso_id' => '1',
-        //     'profesor_id' => '3',
-        // ]);
+        $profesores = Profesor::orderBy('id')->get();
+        $cursos = Curso::orderBy('id')->get();
+
+        if ($profesores->isEmpty() || $cursos->isEmpty()) {
+            return;
+        }
+
+        // codigo => [ [profesor_index, dia, hora_inicio, hora_fin], ... ]
+        $asignaciones = [
+            // Profesor 1 (Lewis) dicta 2 cursos
+            ['profesor' => 0, 'curso' => 'ANT-2026', 'dia' => 'LUNES', 'inicio' => '06:00:00', 'fin' => '09:00:00'],
+            ['profesor' => 0, 'curso' => 'TEO-2026', 'dia' => 'MIERCOLES', 'inicio' => '06:00:00', 'fin' => '09:00:00'],
+
+            // Profesor 2 (TEACHER Gallardo) dicta 2 cursos (uno compartido con Lewis)
+            ['profesor' => 1, 'curso' => 'ANT-2026', 'dia' => 'MARTES', 'inicio' => '18:00:00', 'fin' => '20:00:00'],
+            ['profesor' => 1, 'curso' => 'EV-2026', 'dia' => 'JUEVES', 'inicio' => '18:00:00', 'fin' => '20:00:00'],
+
+            // Profesor 3 (Julio) dicta 1 curso
+            ['profesor' => 2, 'curso' => 'EV-2026', 'dia' => 'SABADO', 'inicio' => '08:00:00', 'fin' => '11:00:00'],
+
+            // Profesor 4 (Martin) dicta 1 curso
+            ['profesor' => 3, 'curso' => 'TEO-2026', 'dia' => 'VIERNES', 'inicio' => '18:00:00', 'fin' => '20:00:00'],
+        ];
+
+        foreach ($asignaciones as $a) {
+            $profesor = $profesores->get($a['profesor']);
+            $curso = $cursos->firstWhere('codigo', $a['curso']);
+
+            if (!$profesor || !$curso) {
+                continue;
+            }
+
+            $horario = Horario::create([
+                'dia' => $a['dia'],
+                'hora_inicio' => $a['inicio'],
+                'hora_fin' => $a['fin'],
+                'profesor_id' => $profesor->id,
+            ]);
+
+            HorarioProfesorCurso::create([
+                'horario_id' => $horario->id,
+                'curso_id' => $curso->id,
+                'profesor_id' => $profesor->id,
+            ]);
+        }
     }
 }

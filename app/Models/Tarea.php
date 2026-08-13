@@ -14,6 +14,7 @@ class Tarea extends Model
     protected $fillable = [
         'curso_id',
         'modulo_id',
+        'tipo',
         'titulo_tarea',
         'descripcion_tarea',
         'fecha_entrega',
@@ -21,14 +22,13 @@ class Tarea extends Model
         'requisitos',
         'criterios_evaluacion',
         'fecha_apertura',
-        // // JD
-        // 'permite_entregas_tardias',
-        // 'penalizacion_tardia',
-        // 'visible',
-        // 'intentos_permitidos',
-        // 'formato_entrega',
-        // 'formatos_aceptados',
-        // 'tamanio_maximo',
+        'permite_entregas_tardias',
+        'penalizacion_tardia',
+        'visible',
+        'intentos_permitidos',
+        'formato_entrega',
+        'formatos_aceptados',
+        'tamanio_maximo',
     ];
     protected $casts = [
         'fecha_entrega' => 'datetime',

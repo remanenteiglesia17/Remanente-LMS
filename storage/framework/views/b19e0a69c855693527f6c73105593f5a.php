@@ -22,7 +22,7 @@
 
                 
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(config('adminlte.auth_logo.enabled', false)): ?>
-                    <img src="<?php echo e(asset(config('adminlte.auth_logo.img.path'))); ?>"
+                    <img src="<?php echo e(asset(config('storage/adminlte.auth_logo.img.path'))); ?>"
                          alt="<?php echo e(config('adminlte.auth_logo.img.alt')); ?>"
                          <?php if(config('adminlte.auth_logo.img.class', null)): ?>
                             class="<?php echo e(config('adminlte.auth_logo.img.class')); ?>"

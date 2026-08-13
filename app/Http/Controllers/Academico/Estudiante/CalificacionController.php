@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Auth;
 class CalificacionController extends Controller
 {
     /**
-     * Ver todas las calificaciones del estudiante
+     * Ver todas las calificaciones del estudiante, agrupadas por curso
+     * y por tipo de evaluación (tarea, quiz, parcial, proyecto...).
      */
     public function index()
     {
@@ -26,21 +27,40 @@ class CalificacionController extends Controller
         // Agrupar por curso
         $calificacionesPorCurso = $calificaciones->groupBy('curso_id');
 
-        // Calcular promedios por curso
+        // Calcular estadísticas reales por curso (sin datos quemados)
         $promedios = [];
         foreach ($calificacionesPorCurso as $cursoId => $califs) {
             $curso = $califs->first()->curso;
-            
+
             $promedioPonderado = Calificacion::promedioPonderadoEstudianteCurso(
-                $estudiante->id, 
+                $estudiante->id,
                 $cursoId
             );
+
+            // Promedio del curso entre todos los estudiantes (para comparar)
+            $estadisticasCurso = Calificacion::estadisticasCurso($cursoId);
+
+            $totalTareasCurso = $curso->tareas()->where('visible', true)->count();
+            $tareasCalificadas = $califs->count();
 
             $promedios[$cursoId] = [
                 'curso' => $curso,
                 'promedio' => $promedioPonderado,
-                'total_calificaciones' => $califs->count(),
+                'promedio_curso' => round($estadisticasCurso['promedio'] ?? 0, 2),
+                'total_calificaciones' => $tareasCalificadas,
+                'total_tareas_curso' => $totalTareasCurso,
+                'porcentaje_completado' => $totalTareasCurso > 0
+                    ? round(($tareasCalificadas / $totalTareasCurso) * 100)
+                    : 0,
                 'aprobado' => $promedioPonderado >= 3.0,
+                // Evaluaciones agrupadas por tipo (tarea, quiz, parcial, proyecto...)
+                'por_tipo' => $califs->groupBy('tipo_evaluacion')->map(function ($grupo) {
+                    return [
+                        'items' => $grupo->sortBy('fecha_calificacion')->values(),
+                        'peso_total' => $grupo->sum('porcentaje'),
+                        'promedio' => round($grupo->avg('nota'), 2),
+                    ];
+                }),
             ];
         }
 

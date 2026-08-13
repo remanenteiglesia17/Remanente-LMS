@@ -22,9 +22,11 @@ class DatabaseSeeder extends Seeder
             SecretariaSeeder::class,
             ProfesorSeeder::class,
             CursoSeeder::class,
-            HorarioSeeder::class, 
+            ModuloSeeder::class,
+            HorarioSeeder::class,          // asigna varios cursos por profesor
             EstudianteSeeder::class,
-            TareaSeeder::class,
+            TareaSeeder::class,            // tareas/quizzes/parciales/proyecto por módulo
+            EntregaCalificacionSeeder::class, // entregas + calificaciones + aprobado/reprobado real
             CalendarioEventoSeeder::class,
         ]); 
         // User::factory(9)->create(); // Crea 9 usuarios
