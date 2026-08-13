@@ -95,7 +95,7 @@ class InscripcionController extends Controller
             // 2. Obtener las clases específicas de ese profesor para ese curso
             // Según tu migración, aquí sí es obligatorio el profesor_id
             $clasesIds = DB::table('clases')
-                ->where('curso_id', 1)
+                ->where('curso_id', $request->curso_id)
                 ->where('profesor_id', $request->profesor_id)
                 ->pluck('id');
 
@@ -220,7 +220,7 @@ class InscripcionController extends Controller
         if (!$inscripcion) {
             abort(404, 'La inscripción no fue encontrada.');
         }
-        
+
         $yaExiste = DB::table('estudiante_curso')
             ->where('estudiante_id', $inscripcion->estudiante_id)
             ->where('curso_id', $request->curso_id)
@@ -299,5 +299,26 @@ class InscripcionController extends Controller
             ->get();
 
         return view('admin.inscripciones.cursos', compact('estudiante', 'cursos'));
+    }
+    public function cambiarEstado(Request $request, $id)
+    {
+        $request->validate([
+            'estado' => 'required|in:activo,retirado,aprobado,reprobado',
+        ]);
+
+        $inscripcion = DB::table('estudiante_curso')->where('id', $id)->first();
+
+        if (!$inscripcion) {
+            return back()->with('error', 'La inscripción no fue encontrada.');
+        }
+
+        DB::table('estudiante_curso')
+            ->where('id', $id)
+            ->update([
+                'estado'     => $request->estado,
+                'updated_at' => now(),
+            ]);
+
+        return back()->with('success', 'El estado de la inscripción ha sido actualizado correctamente.');
     }
 }

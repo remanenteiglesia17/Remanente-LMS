@@ -423,12 +423,11 @@ return [
         /* ============================================================
         | CONFIGURACIÓN (SOLO SUPERADMIN)
         ============================================================ */
-        ['header' => 'CONFIGURACIÓN', 'can' => 'admin.config.index'],
+        ['header' => 'CONFIGURACIÓN'],
 
         [
             'text' => 'Sistema',
-            'icon' => 'fas fa-cogs',
-            'can' => 'admin.config.index',
+            'icon' => 'fas fa-cogs', 
             'submenu' => [
                 [
                     'text' => 'Usuarios',

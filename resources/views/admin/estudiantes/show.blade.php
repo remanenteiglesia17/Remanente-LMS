@@ -1,98 +1,56 @@
-<!-- Modal de Show -->
-<div class="modal fade" id="showEstudianteModal" tabindex="-1" role="dialog" aria-labelledby="showEstudianteModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="showEstudianteModalLabel">Mostrar Estudiante</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true" class="h2">&times;</span>
-                </button>
+@extends('adminlte::page')
+
+@section('title', 'Mostrar Estudiante')
+
+@section('content_header')
+    <h1>Detalle del Estudiante</h1>
+@stop
+
+@section('content')
+<div class="container-fluid">
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-user-graduate mr-1"></i>
+                {{ $estudiante->nombres }} {{ $estudiante->apellidos }}
+            </h3>
+            <div class="card-tools">
+                <a href="{{ route('admin.inscripciones.index') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="nombres">Nombres </label>
-                                        <p>{{ $estudiante->nombres }}</p>
-
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="apellidos">Apellidos </label>
-                                        <p>{{ $estudiante->apellidos }}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="cc">CC </label>
-                                        <p>{{ $estudiante->cc }}</p>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="telefono">Teléfono </label>
-                                        <p>{{ $estudiante->telefono }}</p>
-
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="genero">Sexo </label>
-                                        @if ($estudiante->genero == 'M')
-                                            'Masculino'
-                                        @else
-                                            'Femenino'
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="correo">Correo </label>
-                                        <p>{{ $estudiante->correo }}</p>
-
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="direccion">Direccion </label>
-                                        <p>{{ $estudiante->direccion }}</p>
-
-                                    </div>
-                                </div> 
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="contacto_emergencia">Contacto Emergencia</label>
-                                        <p>{{ $estudiante->contacto_emergencia }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label for="observaciones">Observaciones</label>
-                                        <p>{{ $estudiante->observaciones }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-group list-group-unbordered mb-3">
+                        <li class="list-group-item">
+                            <b>Identificación (CC):</b> <span class="float-right">{{ $estudiante->cedula ?? $estudiante->identificacion }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Teléfono:</b> <span class="float-right">{{ $estudiante->telefono }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Sexo:</b> <span class="float-right">{{ $estudiante->sexo }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group list-group-unbordered mb-3">
+                        <li class="list-group-item">
+                            <b>Dirección:</b> <span class="float-right">{{ $estudiante->direccion }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Contacto de Emergencia:</b> <span class="float-right">{{ $estudiante->contacto_emergencia }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Observaciones:</b> <span class="float-right">{{ $estudiante->observaciones }}</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@stop

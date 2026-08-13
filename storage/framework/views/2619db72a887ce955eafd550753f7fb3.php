@@ -1,99 +1,58 @@
-<!-- Modal de Show -->
-<div class="modal fade" id="showEstudianteModal" tabindex="-1" role="dialog" aria-labelledby="showEstudianteModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="showEstudianteModalLabel">Mostrar Estudiante</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true" class="h2">&times;</span>
-                </button>
+
+
+<?php $__env->startSection('title', 'Mostrar Estudiante'); ?>
+
+<?php $__env->startSection('content_header'); ?>
+    <h1>Detalle del Estudiante</h1>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('content'); ?>
+<div class="container-fluid">
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-user-graduate mr-1"></i>
+                <?php echo e($estudiante->nombres); ?> <?php echo e($estudiante->apellidos); ?>
+
+            </h3>
+            <div class="card-tools">
+                <a href="<?php echo e(route('admin.inscripciones.index')); ?>" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="nombres">Nombres </label>
-                                        <p><?php echo e($estudiante->nombres); ?></p>
-
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="apellidos">Apellidos </label>
-                                        <p><?php echo e($estudiante->apellidos); ?></p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="cc">CC </label>
-                                        <p><?php echo e($estudiante->cc); ?></p>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="telefono">Teléfono </label>
-                                        <p><?php echo e($estudiante->telefono); ?></p>
-
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="genero">Sexo </label>
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($estudiante->genero == 'M'): ?>
-                                            'Masculino'
-                                        <?php else: ?>
-                                            'Femenino'
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="correo">Correo </label>
-                                        <p><?php echo e($estudiante->correo); ?></p>
-
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="direccion">Direccion </label>
-                                        <p><?php echo e($estudiante->direccion); ?></p>
-
-                                    </div>
-                                </div> 
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="contacto_emergencia">Contacto Emergencia</label>
-                                        <p><?php echo e($estudiante->contacto_emergencia); ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label for="observaciones">Observaciones</label>
-                                        <p><?php echo e($estudiante->observaciones); ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-group list-group-unbordered mb-3">
+                        <li class="list-group-item">
+                            <b>Identificación (CC):</b> <span class="float-right"><?php echo e($estudiante->cedula ?? $estudiante->identificacion); ?></span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Teléfono:</b> <span class="float-right"><?php echo e($estudiante->telefono); ?></span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Sexo:</b> <span class="float-right"><?php echo e($estudiante->sexo); ?></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group list-group-unbordered mb-3">
+                        <li class="list-group-item">
+                            <b>Dirección:</b> <span class="float-right"><?php echo e($estudiante->direccion); ?></span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Contacto de Emergencia:</b> <span class="float-right"><?php echo e($estudiante->contacto_emergencia); ?></span>
+                        </li>
+                        <li class="list-group-item">
+                            <b>Observaciones:</b> <span class="float-right"><?php echo e($estudiante->observaciones); ?></span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<?php /**PATH C:\laragon\www\Remanente\Canvas-Church60\resources\views/admin/estudiantes/show.blade.php ENDPATH**/ ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\Remanente\Canvas-Church60\resources\views/admin/estudiantes/show.blade.php ENDPATH**/ ?>
