@@ -1,0 +1,1 @@
+<?php /**PATH C:\laragon\www\Remanente\Canvas-Church5\resources\views/admin/cursos/content/documentos-show.blade.php ENDPATH**/ ?>
