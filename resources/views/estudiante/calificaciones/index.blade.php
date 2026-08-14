@@ -33,11 +33,41 @@
                     <h3 class="card-title">
                         <i class="fas fa-book"></i> {{ $curso->codigo }} - {{ $curso->nombre }}
                     </h3>
-                    <div class="card-tools">
+                    <div class="card-tools d-flex align-items-center gap-1" style="gap:6px">
                         <span class="badge badge-light">Período: {{ $curso->periodo }}</span>
-                        <a href="{{ route('estudiante.calificaciones.por-curso', $curso->id) }}" class="badge badge-light">
+                        <a href="{{ route('estudiante.calificaciones.por-curso', $curso->id) }}" class="badge badge-light ml-1">
                             <i class="fas fa-eye"></i> Ver detalle
                         </a>
+
+                        {{-- ── Botón Certificado ── --}}
+                        @php
+                            $cursoPivot = auth()->user()->estudiante
+                                ->cursos()->where('cursos.id', $curso->id)
+                                ->withPivot('horas_realizadas', 'estado')->first();
+                            $estadoPivot  = $cursoPivot?->pivot->estado ?? 'activo';
+                            $notaOk       = $data['aprobado'];
+                            $horasOk      = $cursoPivot && $cursoPivot->pivot->horas_realizadas >= $curso->horas_requeridas;
+                            $puedeDescargar = ($estadoPivot === 'aprobado') || ($notaOk && $horasOk);
+                        @endphp
+
+                        @if($puedeDescargar)
+                            <a href="{{ route('certificate.download', $curso->id) }}"
+                               class="btn btn-sm btn-success ml-1"
+                               title="¡Felicitaciones! Descarga tu certificado">
+                                <i class="fas fa-certificate"></i> Obtener Certificado
+                            </a>
+                        @else
+                            @php
+                                $razon = !$notaOk ? 'Nota insuficiente' : 'Pendiente de aprobación';
+                            @endphp
+                            <button class="btn btn-sm btn-secondary ml-1" disabled
+                                    title="El profesor debe marcar el curso como Aprobado en Inscripciones, o debes aprobar con nota ≥ 3.0">
+                                <i class="fas fa-lock"></i> Certificado
+                                <span class="badge badge-light ml-1" style="font-size:9px">
+                                    {{ $razon }}
+                                </span>
+                            </button>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body">

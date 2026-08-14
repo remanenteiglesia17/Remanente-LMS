@@ -127,7 +127,7 @@
     @endif
     <div class="row pt-3">
         {{-- Configuracion --}}
-        @can('admin.config.index')
+        @can('admin.config.create')
             <div class="col-lg-3 col-6">
                 <div class="small-box bg-info">
                     <div class="inner">

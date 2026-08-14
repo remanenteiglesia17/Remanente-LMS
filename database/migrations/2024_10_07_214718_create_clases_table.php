@@ -15,9 +15,10 @@ return new class extends Migration {
             $table->dateTime('fecha_hora_fin');
             $table->string('color');
             $table->enum('estado', ['programada', 'dictada', 'cancelada'])
-                  ->default('programada');
+                ->default('programada');
 
-            $table->foreignId('curso_id')->constrained()->cascadeOnDelete();
+            // 🔴 CAMBIO AQUÍ: Especificar 'cursos' en constrained()
+            $table->foreignId('curso_id')->constrained('cursos')->cascadeOnDelete();
             $table->foreignId('profesor_id')->constrained('profesors')->cascadeOnDelete();
 
             $table->timestamps();

@@ -83,4 +83,33 @@ class User extends Authenticatable // AQUI ESTA DESACTIVADO
             ])
             ->withTimestamps();
     }
+
+    /**
+     * Determina si el usuario completó un curso.
+     * Condición: el estado del pivot es 'aprobado' O (nota >= 3.0 Y horas completas).
+     * El profesor puede marcar como aprobado desde Inscripciones.
+     */
+    public function hasCompletedCourse(\App\Models\Curso $course): bool
+    {
+        $estudiante = $this->estudiante;
+        if (!$estudiante) return false;
+
+        $pivot = $estudiante->cursos()
+            ->where('cursos.id', $course->id)
+            ->withPivot('horas_realizadas', 'estado')
+            ->first();
+
+        if (!$pivot) return false;
+
+        // Si el profesor marcó el estado como 'aprobado', certificado directo
+        if ($pivot->pivot->estado === 'aprobado') return true;
+
+        // Fallback: nota >= 3.0 y horas completadas
+        $horasOk = $pivot->pivot->horas_realizadas >= $course->horas_requeridas;
+        $promedio = \App\Models\Calificacion::promedioPonderadoEstudianteCurso(
+            $estudiante->id,
+            $course->id
+        );
+        return $horasOk && $promedio >= 3.0;
+    }
 }

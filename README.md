@@ -1,3 +1,5 @@
+
+los parciales son relativos a la cantidad de modulos
 # 🎓 Sistema de Gestión Académica (LMS) - REDEEMER
 
 <div align="center">

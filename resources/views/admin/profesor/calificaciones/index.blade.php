@@ -37,7 +37,20 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped m-0" id="tabla-notas">
+                        
+    {{-- Botón finalizar curso --}}
+    @if(isset($cursoSeleccionado) && $cursoSeleccionado)
+    <form method="POST" action="{{ route('admin.profesor.calificaciones.aprobar-curso') }}"
+          onsubmit="return confirm('¿Marcar a TODOS los estudiantes activos como Aprobados?')">
+        @csrf
+        <input type="hidden" name="curso_id" value="{{ $cursoSeleccionado->id }}">
+        <button type="submit" class="btn btn-success btn-sm mb-3">
+            <i class="fas fa-graduation-cap mr-1"></i> Finalizar curso y aprobar estudiantes
+        </button>
+    </form>
+    @endif
+
+    <table class="table table-bordered table-striped m-0" id="tabla-notas">
                             <thead class="bg-light">
                                 <tr>
                                     <th width="50" class="text-center">#</th>

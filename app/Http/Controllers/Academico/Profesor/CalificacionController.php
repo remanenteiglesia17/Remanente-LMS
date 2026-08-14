@@ -198,4 +198,33 @@ class CalificacionController extends Controller
         if (str_starts_with($concepto, 'P')) return 'parcial';
         return 'otro';
     }
+
+    /**
+     * Marcar todos los estudiantes de un curso como Aprobados (habilita certificado).
+     */
+    public function aprobarCurso(Request $request)
+    {
+        $request->validate(['curso_id' => 'required|exists:cursos,id']);
+
+        $profesor = Auth::user()->profesor;
+
+        // Solo el profesor del curso puede hacer esto
+        abort_unless(
+            $profesor->cursos->contains($request->curso_id),
+            403,
+            'No tienes acceso a este curso.'
+        );
+
+        DB::table('estudiante_curso')
+            ->where('curso_id', $request->curso_id)
+            ->where('estado', 'activo')
+            ->update(['estado' => 'aprobado', 'updated_at' => now()]);
+
+        return back()->with([
+            'swal' => 2,
+            'title' => '¡Listo!',
+            'info'  => 'Todos los estudiantes activos han sido marcados como Aprobados. Ya pueden descargar su certificado.',
+            'icon'  => 'success',
+        ]);
+    }
 }

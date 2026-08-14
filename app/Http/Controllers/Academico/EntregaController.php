@@ -13,7 +13,7 @@ class EntregaController extends Controller
     public function index(Tarea $tarea)
     {
         // Ver todas las entregas de una tarea
-        $entregas = $tarea->entregas()->with('user')->get();
+        $entregas = $tarea->entregas()->with(['estudiante.user', 'calificacion', 'archivos'])->get();
 
         return view('profesor.entregas.index', compact('tarea', 'entregas'));
     }

@@ -137,6 +137,10 @@ Route::get('profesor/calificaciones/visual', function () {
     return view('profesor.calificaciones.visual');})->name('profesor.calificaciones.visual');
 
 // Rutas para PROFESORES - Calificaciones
+Route::post('/profesor/calificaciones/aprobar-curso', [\App\Http\Controllers\Academico\Profesor\CalificacionController::class, 'aprobarCurso'])
+    ->middleware(['auth', 'role:profesor'])
+    ->name('profesor.calificaciones.aprobar-curso');
+
 Route::prefix('profesor/calificaciones')->middleware(['auth', 'role:profesor'])->name('profesor.calificaciones.')->group(function () {
     Route::get('/', [CalificacionController::class, 'index'])->name('index');                                                           // Ver todas las calificaciones de sus cursos
     // Route::get('/curso/{curso}', [CalificacionController::class, 'porCurso'])->name('por-curso');                                       // Ver calificaciones de un curso específico

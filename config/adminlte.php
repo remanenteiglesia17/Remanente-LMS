@@ -296,8 +296,8 @@ return [
         [
             'text' => 'Asistencias',
             'icon' => 'fas fa-clipboard-check',
-            'route' => 'asistencias.index',
-            'can' => 'asistencias.index',
+            'route' => 'admin.asistencias.index',
+            'can' => 'admin.asistencias.index',
         ],
 
         /* ================= ESTADÍSTICAS / REPORTES ================= */
@@ -337,20 +337,8 @@ return [
         [
             'text' => 'Tareas',
             'icon' => 'fas fa-tasks', //     'icon' => 'fas fa-book-reader',
-            // 'submenu' => [
-            //     [
-            //         'text' => 'Ver tareas',
-            //         'icon' => 'nav-icon far fa-circle text-primary', // fas fa-eye
             'route' => 'admin.profesor.tareas.index',
             'can' => 'admin.profesor.tareas.index',
-            //     ],
-            //     [
-            //         'text' => 'Crear tarea',
-            //         'icon' => 'nav-icon far fa-circle text-primary', // fas fa-plus
-            //         'route' => 'admin.profesor.tareas.create',
-            //         'can' => 'admin.profesor.tareas.create',
-            //     ],
-            // ],
         ],
         [
             'text' => 'Módulos',
@@ -423,7 +411,7 @@ return [
         /* ============================================================
         | CONFIGURACIÓN (SOLO SUPERADMIN)
         ============================================================ */
-        ['header' => 'CONFIGURACIÓN'],
+        ['header' => 'CONFIGURACIÓN', 'can' => 'admin.config.index'],
 
         [
             'text' => 'Sistema',
@@ -453,7 +441,7 @@ return [
             'text' => 'Configuración',
             'icon' => 'fas fa-sliders-h',
             'route' => 'admin.config.index',
-            'can' => 'admin.config.index',
+            'can' => 'admin.config.create',
         ],
         //               [
         //     'text' => 'attempt',

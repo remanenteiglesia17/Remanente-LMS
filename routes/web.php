@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\PerfilCompletarController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\Academico\Estudiante\CalificacionController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\EstudianteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/admin', [HomeController::class, 'show'])->name('admin.home.show');
@@ -120,3 +122,9 @@ Route::middleware('auth')->prefix('notificaciones')->name('notificaciones.')->gr
     Route::post('/{id}/read',      [NotificacionController::class, 'markRead'])->name('read');
     Route::post('/read-all',       [NotificacionController::class, 'markAllRead'])->name('read-all');
 });
+
+
+// 2. Ruta para descargar el Certificado PDF
+Route::get('/certificado/descargar/{course}', [CertificateController::class, 'generate'])
+    ->middleware(['auth', 'role:estudiante'])
+    ->name('certificate.download');

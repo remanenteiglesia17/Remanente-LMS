@@ -27,7 +27,7 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'admin.users.create', 'description' => 'Crear usuarios del sistema'])->syncRoles([$root, $superAdmin, $admin]);
         Permission::create(['name' => 'admin.users.edit', 'description' => 'Editar usuarios del sistema (incluye asignar roles y cambiar contraseña)'])->syncRoles([$root, $superAdmin, $admin]);
         Permission::create(['name' => 'admin.users.destroy', 'description' => 'Activar/desactivar usuarios del sistema'])->syncRoles([$root, $superAdmin, $admin]);
-        Permission::create(['name' => 'admin.config.index', 'description' => 'Ver configuraciones del sistema'])->syncRoles([$root, $superAdmin]);
+        Permission::create(['name' => 'admin.config.index', 'description' => 'Ver configuraciones del sistema'])->syncRoles([$root, $superAdmin, $secretaria]);
         Permission::create(['name' => 'admin.config.create', 'description' => 'Crear nuevas configuraciones'])->syncRoles([$root, $superAdmin]);
         Permission::create(['name' => 'admin.config.store', 'description' => 'Guardar configuraciones'])->syncRoles([$root, $superAdmin]);
         Permission::create(['name' => 'admin.config.show', 'description' => 'Ver detalles de configuración'])->syncRoles([$root, $superAdmin]);
