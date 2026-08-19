@@ -14,6 +14,7 @@ class Tarea extends Model
     protected $fillable = [
         'curso_id',
         'modulo_id',
+        'parcial_id',
         'tipo',
         'titulo_tarea',
         'descripcion_tarea',
@@ -46,6 +47,11 @@ class Tarea extends Model
     public function modulo()
     {
         return $this->belongsTo(Modulo::class);
+    }
+
+    public function parcial()
+    {
+        return $this->belongsTo(Parcial::class);
     }
 
     public function documentos()

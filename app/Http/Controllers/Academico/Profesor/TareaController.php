@@ -62,7 +62,7 @@ class TareaController extends Controller
         $profesor = $user->profesor;
 
         // Obtener cursos del profesor
-        $cursos = $profesor->cursos()->with('modulos')->get();
+        $cursos = $profesor->cursos()->with(['modulos', 'parciales'])->get();
 
         if ($cursos->isEmpty()) {
             return redirect()->back()->with([
@@ -80,6 +80,7 @@ class TareaController extends Controller
         $validate = $request->validate([
             'curso_id' => 'required|exists:cursos,id',
             'modulo_id'=> 'nullable|exists:modulos,id',
+            'parcial_id'=> 'nullable|exists:parciales,id',
             'tipo' => 'required|in:tarea,quiz,examen,proyecto,foro',
             'titulo_tarea' => 'required|string|max:255',
             'descripcion_tarea' => 'required|string',
@@ -97,6 +98,10 @@ class TareaController extends Controller
         $profesor = $user->profesor;
         if (!$profesor->cursos()->where('cursos.id', $request->curso_id)->exists()) {
             return redirect()->back()->with(['swal' => '1', 'info' => 'Sin acceso a este curso.', 'icon' => 'error']);
+        }
+
+        if ($request->filled('parcial_id') && !\App\Models\Parcial::where('id', $request->parcial_id)->where('curso_id', $request->curso_id)->exists()) {
+            return redirect()->back()->withInput()->with(['swal' => '1', 'info' => 'El parcial seleccionado no pertenece a este curso.', 'icon' => 'error']);
         }
 
         try {
@@ -170,7 +175,7 @@ class TareaController extends Controller
             }
 
             // Traemos los cursos para el <select> de la vista
-            $cursos = $profesor->cursos()->with('modulos')->get();
+            $cursos = $profesor->cursos()->with(['modulos', 'parciales'])->get();
 
             return view('profesor.tareas.edit', compact('tarea', 'cursos'));
         } catch (\Exception $e) {
@@ -191,6 +196,7 @@ class TareaController extends Controller
         $data = $request->validate([
             'curso_id' => 'required|exists:cursos,id',
             'modulo_id'=> 'nullable|exists:modulos,id',
+            'parcial_id'=> 'nullable|exists:parciales,id',
             'tipo' => 'required|in:tarea,quiz,examen,proyecto,foro',
             'titulo_tarea' => 'required|string|max:255',
             'descripcion_tarea' => 'required|string',
@@ -215,6 +221,10 @@ class TareaController extends Controller
                     'info' => 'No tienes acceso al curso seleccionado.',
                     'icon' => 'error'
                 ]);
+        }
+
+        if ($request->filled('parcial_id') && !\App\Models\Parcial::where('id', $request->parcial_id)->where('curso_id', $request->curso_id)->exists()) {
+            return redirect()->back()->withInput()->with(['swal' => '1', 'info' => 'El parcial seleccionado no pertenece a este curso.', 'icon' => 'error']);
         }
 
         try {

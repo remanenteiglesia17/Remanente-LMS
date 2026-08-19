@@ -77,6 +77,7 @@ class CalificacionController extends Controller
                 [
                     'estudiante_id'    => $entrega->estudiante_id,
                     'curso_id'         => $tarea->curso_id,
+                    'parcial_id'       => $tarea->parcial_id,
                     'profesor_id'      => Auth::user()->profesor->id,
                     'concepto'         => $tarea->titulo_tarea,
                     'nota'             => $request->nota,

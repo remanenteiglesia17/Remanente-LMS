@@ -101,15 +101,18 @@ class User extends Authenticatable // AQUI ESTA DESACTIVADO
 
         if (!$pivot) return false;
 
-        // Si el profesor marcó el estado como 'aprobado', certificado directo
+        // Si el profesor marcó explícitamente como aprobado → directo
         if ($pivot->pivot->estado === 'aprobado') return true;
 
-        // Fallback: nota >= 3.0 y horas completadas
-        $horasOk = $pivot->pivot->horas_realizadas >= $course->horas_requeridas;
+        // Si fue marcado como retirado o reprobado → no
+        if (in_array($pivot->pivot->estado, ['retirado', 'reprobado'])) return false;
+
+        // Condición principal: nota ponderada >= 3.0
         $promedio = \App\Models\Calificacion::promedioPonderadoEstudianteCurso(
             $estudiante->id,
             $course->id
         );
-        return $horasOk && $promedio >= 3.0;
+
+        return $promedio >= 3.0;
     }
 }

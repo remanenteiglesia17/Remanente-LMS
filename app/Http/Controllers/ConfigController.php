@@ -45,7 +45,7 @@ class ConfigController extends Controller
             $file     = $request->file('logo');
             $nombre = time() . "_" . $file->getClientOriginalName();
             $ruta = $file->storeAs('logo', $nombre);
-            $url = $ruta;
+            $url = 'storage/' . $ruta;
             $config->logo = $url;
             $config->save();
 

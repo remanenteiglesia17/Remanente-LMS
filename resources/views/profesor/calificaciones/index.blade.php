@@ -4,6 +4,9 @@
 
 @section('content_header')
     <h1><i class="fas fa-book"></i> Gestión de Calificaciones</h1>
+    <a href="{{ route('admin.profesor.parciales.index') }}" class="btn btn-sm btn-outline-primary float-right">
+        <i class="fas fa-calendar-check"></i> Parciales y nota final
+    </a>
 @stop
 
 @section('content')
@@ -84,9 +87,10 @@
                                                 <input type="number"
                                                     name="notas[{{ $estudiante->id }}][{{ $tarea->id }}]"
                                                     class="form-control form-control-sm text-center input-nota mb-1"
-                                                    step="0.1" min="0" max="{{ $tarea->puntaje }}"
+                                                    step="0.1" min="0" max="5"
                                                     value="{{ $calificacion->nota ?? '' }}"
-                                                    data-peso="{{ $tarea->porcentaje }}" data-max="{{ $tarea->puntaje }}">
+                                                    placeholder="0.0 – 5.0"
+                                                    data-peso="{{ $tarea->porcentaje }}" data-max="5">
 
                                                 @if ($entrega)
                                                     {{-- Botón único de revisión --}}
@@ -108,9 +112,41 @@
                                             </td>
                                         @endforeach
 
-                                        <td class="text-center align-middle">
-                                            <span class="badge badge-primary nota-final"
-                                                id="final-{{ $estudiante->id }}">0.0</span>
+                                        @php
+                                            // Calcular nota final ponderada desde BD para inicializar la columna
+                                            $notaFinalBD = 0;
+                                            $pesoBD = 0;
+                                            foreach ($tareasDelCurso as $t) {
+                                                $cal = $estudiante->calificaciones->where('concepto', $t->titulo_tarea)->first();
+                                                if ($cal) {
+                                                    $notaFinalBD += ($cal->nota / 5.0) * 5 * ($t->porcentaje / 100);
+                                                    $pesoBD += $t->porcentaje;
+                                                }
+                                            }
+                                            if ($pesoBD > 0 && $pesoBD < 100) {
+                                                $notaFinalBD = ($notaFinalBD / $pesoBD) * 100;
+                                            }
+                                            $aprobadoBD = $pesoBD > 0 && $notaFinalBD >= 3.0;
+                                        @endphp
+                                        <td class="text-center align-middle" style="min-width:90px">
+                                            <span class="badge nota-final {{ $pesoBD > 0 ? ($aprobadoBD ? 'badge-success' : 'badge-danger') : 'badge-secondary' }} d-block mb-1"
+                                                id="final-{{ $estudiante->id }}"
+                                                style="font-size:14px;padding:5px 8px">
+                                                {{ $pesoBD > 0 ? number_format($notaFinalBD, 2) : '—' }}
+                                            </span>
+                                            <span class="estado-final" id="estado-{{ $estudiante->id }}">
+                                                @if($pesoBD > 0)
+                                                    @if($aprobadoBD)
+                                                        <span class="badge badge-success" style="font-size:11px">
+                                                            <i class="fas fa-check-circle"></i> Aprobado
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-danger" style="font-size:11px">
+                                                            <i class="fas fa-times-circle"></i> Reprobado
+                                                        </span>
+                                                    @endif
+                                                @endif
+                                            </span>
                                         </td>
 
                                     </tr>
@@ -148,23 +184,40 @@
                 let sumaPesos = 0;
 
                 row.find('.input-nota').each(function() {
-                    let nota = parseFloat($(this).val()) || 0;
+                    let nota = parseFloat($(this).val());
                     let peso = parseFloat($(this).data('peso')) || 0;
-                    let max = parseFloat($(this).data('max')) || 100;
+                    let max  = parseFloat($(this).data('max'))  || 5;
 
-                    // Normalizamos la nota a base 5.0 para el cálculo final si es necesario
-                    // O simplemente sumamos (nota * (peso/100))
-                    totalPonderado += (nota * (peso / 100));
-                    sumaPesos += peso;
+                    if (!isNaN(nota) && max > 0) {
+                        // Normalizar a escala 5.0 y ponderar
+                        totalPonderado += (nota / max) * 5 * (peso / 100);
+                        sumaPesos += peso;
+                    }
                 });
 
                 let badge = row.find('.nota-final');
-                badge.text(totalPonderado.toFixed(2));
 
-                if (totalPonderado >= 3.0) {
-                    badge.removeClass('badge-danger').addClass('badge-success');
+                let estadoSpan = row.find('.estado-final');
+
+                if (sumaPesos === 0) {
+                    badge.text('—').removeClass('badge-success badge-danger').addClass('badge-secondary');
+                    estadoSpan.html('');
+                    return;
+                }
+
+                // Si los pesos no suman 100%, escalar el resultado
+                let notaFinal = sumaPesos < 100
+                    ? (totalPonderado / sumaPesos) * 100
+                    : totalPonderado;
+
+                badge.text(notaFinal.toFixed(2));
+
+                if (notaFinal >= 3.0) {
+                    badge.removeClass('badge-danger badge-secondary').addClass('badge-success');
+                    estadoSpan.html('<span class="badge badge-success" style="font-size:11px"><i class="fas fa-check-circle"></i> Aprobado</span>');
                 } else {
-                    badge.removeClass('badge-success').addClass('badge-danger');
+                    badge.removeClass('badge-success badge-secondary').addClass('badge-danger');
+                    estadoSpan.html('<span class="badge badge-danger" style="font-size:11px"><i class="fas fa-times-circle"></i> Reprobado</span>');
                 }
             });
         }

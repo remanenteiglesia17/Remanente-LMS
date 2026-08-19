@@ -3,7 +3,11 @@
 namespace App\Providers;
 
 use App\Events\PostEvent;
+use App\Listeners\LogAuditoriaAuth;
 use App\Listeners\PostListener;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -21,6 +25,15 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
         PostEvent::class => [ PostListener::class,],
+        Login::class => [
+            [LogAuditoriaAuth::class, 'handleLogin'],
+        ],
+        Logout::class => [
+            [LogAuditoriaAuth::class, 'handleLogout'],
+        ],
+        Failed::class => [
+            [LogAuditoriaAuth::class, 'handleFailed'],
+        ],
     ];
 
     /**

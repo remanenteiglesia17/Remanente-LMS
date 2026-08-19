@@ -346,6 +346,12 @@ return [
             'route' => 'admin.profesor.modulos.index',
             'can' => 'admin.profesor.modulos.index',
         ],
+        [
+            'text' => 'Parciales',
+            'icon' => 'fas fa-calendar-check',
+            'route' => 'admin.profesor.parciales.index',
+            'can' => 'admin.profesor.parciales.index',
+        ],
 
         // [
         //     'text' => 'Reportes',
@@ -435,12 +441,18 @@ return [
                     'route' => 'admin.permissions.index',
                     'can' => 'permissions.index',
                 ],
+                [
+                    'text' => 'Auditoría',
+                    'icon' => 'fas fa-clipboard-list',
+                    'route' => 'admin.auditorias.index',
+                    'can' => 'admin.auditorias.index',
+                ],
             ],
         ],
         [
             'text' => 'Configuración',
             'icon' => 'fas fa-sliders-h',
-            'route' => 'admin.config.index',
+            'route' => 'admin.config.create',
             'can' => 'admin.config.create',
         ],
         //               [

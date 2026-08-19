@@ -117,6 +117,11 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'admin.profesor.modulos.create', 'description' => 'Crear módulos'])->syncRoles([$profesor]);
         Permission::create(['name' => 'admin.profesor.modulos.edit', 'description' => 'Finalizar/reabrir módulos'])->syncRoles([$profesor]);
         Permission::create(['name' => 'admin.profesor.modulos.destroy', 'description' => 'Eliminar módulos'])->syncRoles([$profesor]);
+
+        Permission::create(['name' => 'admin.profesor.parciales.index', 'description' => 'Ver los parciales de sus cursos y la nota final de sus estudiantes'])->syncRoles([$profesor]);
+        Permission::create(['name' => 'admin.profesor.parciales.create', 'description' => 'Crear parciales'])->syncRoles([$profesor]);
+        Permission::create(['name' => 'admin.profesor.parciales.edit', 'description' => 'Editar parciales'])->syncRoles([$profesor]);
+        Permission::create(['name' => 'admin.profesor.parciales.destroy', 'description' => 'Eliminar parciales'])->syncRoles([$profesor]);
         
         // ------------------------ ESTUDIANTE - TAREAS --------------------------------------------
         Permission::create(['name' => 'estudiante.cursos.index', 'description' => 'Ver tareas asignadas'])->syncRoles([$estudiante]);
@@ -189,6 +194,7 @@ class RoleSeeder extends Seeder
         // ------------------------ ROOT - DELETE --------------------------------------------------
         Permission::create(['name' => 'admin.roles.index', 'description' => 'Gestionar roles'])->syncRoles([$root]);
         Permission::create(['name' => 'admin.permissions.index', 'description' => 'Gestionar permisos'])->syncRoles([$root]);
+        Permission::create(['name' => 'admin.auditorias.index', 'description' => 'Ver la bitácora de auditoría del sistema'])->syncRoles([$root, $superAdmin]);
         Permission::create(['name' => 'admin.profesores.destroy', 'description' => 'Eliminar profesores (peligroso)'])->syncRoles([$root]);
         Permission::create(['name' => 'admin.secretarias.destroy', 'description' => 'Eliminar secretarias (peligroso)'])->syncRoles([$root]);
         Permission::create(['name' => 'admin.estudiantes.destroy', 'description' => 'Eliminar estudiantes (peligroso)'])->syncRoles([$root]);

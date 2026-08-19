@@ -49,6 +49,23 @@
                 </div>
             </div>
 
+            {{-- Fechas del curso (usadas para calcular la nota final) --}}
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="fecha_inicio">Fecha de inicio del curso</label>
+                        <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control"
+                            value="{{ old('fecha_inicio', optional($curso->fecha_inicio)->format('Y-m-d')) }}">
+                        <small class="form-text text-muted">La nota final solo promedia calificaciones registradas dentro de este rango.</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="fecha_fin">Fecha de finalización del curso</label>
+                        <input type="date" name="fecha_fin" id="fecha_fin" class="form-control"
+                            value="{{ old('fecha_fin', optional($curso->fecha_fin)->format('Y-m-d')) }}">
+                    </div>
+                </div>
+            </div>
+
             <hr>
         </div>
     </div>

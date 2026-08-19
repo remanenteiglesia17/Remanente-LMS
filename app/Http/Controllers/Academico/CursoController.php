@@ -46,6 +46,8 @@ class CursoController extends Controller
             'horas_requeridas' => 'required|integer|min:1',
             'estado' => 'required|in:0,1',
             'descripcion' => 'required|string',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
         ]);
         if ($validator->fails()) {
             return back()
@@ -106,6 +108,8 @@ class CursoController extends Controller
             'descripcion' => 'required|string',
             'periodo' => 'required|string',
             'codigo' => 'required|string',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
         ]);
         // dd($request->all());
         DB::transaction(function () use ($request, $curso) {
@@ -115,6 +119,8 @@ class CursoController extends Controller
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
                 'periodo' => $request->periodo,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
             ]);
 
             // 2️⃣ Objetivo general

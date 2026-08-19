@@ -68,6 +68,27 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="fecha_inicio">Fecha de inicio del curso</label>
+                                <input type="date" class="form-control" name="fecha_inicio" value="{{ old('fecha_inicio') }}">
+                                <small class="form-text text-muted">La nota final solo promedia calificaciones dentro de este rango.</small>
+                                @error('fecha_inicio')
+                                    <small class="bg-danger text-white p-1">{{ $message }}</small>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="fecha_fin">Fecha de finalización del curso</label>
+                                <input type="date" class="form-control" name="fecha_fin" value="{{ old('fecha_fin') }}">
+                                @error('fecha_fin')
+                                    <small class="bg-danger text-white p-1">{{ $message }}</small>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-12">
                             <div class="form-group">
 

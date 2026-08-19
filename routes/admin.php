@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Academico\Profesor\TareaController; 
 use App\Http\Controllers\Academico\Profesor\ModuloController as ProfesorModuloController;
+use App\Http\Controllers\Academico\Profesor\ParcialController;
 use App\Http\Controllers\Academico\Profesor\CalificacionController;
 use App\Http\Controllers\Academico\CursoController;
 
 use App\Http\Controllers\Academico\InscripcionController;
+use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\HorarioController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -133,6 +135,13 @@ Route::prefix('profesor/modulos')->middleware(['auth', 'role:profesor'])->name('
     Route::delete('/{modulo}', [ProfesorModuloController::class, 'destroy'])->name('destroy');
 });
 
+Route::prefix('profesor/parciales')->middleware(['auth', 'role:profesor'])->name('profesor.parciales.')->group(function () {
+    Route::get('/', [ParcialController::class, 'index'])->name('index');
+    Route::post('/', [ParcialController::class, 'store'])->name('store');
+    Route::put('/{parcial}', [ParcialController::class, 'update'])->name('update');
+    Route::delete('/{parcial}', [ParcialController::class, 'destroy'])->name('destroy');
+});
+
 Route::get('profesor/calificaciones/visual', function () {
     return view('profesor.calificaciones.visual');})->name('profesor.calificaciones.visual');
 
@@ -170,6 +179,10 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('/users', UserController::class)->names('users'); // USERS ROUTES
     Route::patch('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'    ])->name('users.toggleStatus');
+
+    // AUDITORÍA: bitácora de creación/edición/eliminación e inicios de sesión
+    Route::get('/auditorias', [AuditoriaController::class, 'index'])->name('auditorias.index');
+    Route::get('/auditorias/{auditoria}', [AuditoriaController::class, 'show'])->name('auditorias.show');
 });
 
 

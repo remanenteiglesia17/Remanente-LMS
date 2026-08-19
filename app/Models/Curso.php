@@ -15,7 +15,19 @@ class Curso extends Model
         'estado',
         'periodo',
         'horas_requeridas',
-    ]; 
+        'fecha_inicio',
+        'fecha_fin',
+    ];
+
+    protected $casts = [
+        'fecha_inicio' => 'date',
+        'fecha_fin' => 'date',
+    ];
+
+    public function parciales()
+    {
+        return $this->hasMany(Parcial::class)->orderBy('numero');
+    }
     public function objetivos()
     {
         return $this->hasMany(Objetivo::class);
