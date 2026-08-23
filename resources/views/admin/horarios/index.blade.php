@@ -34,6 +34,7 @@
                                 <th>Dia de atencion</th>
                                 <th>Hora Inicio</th>
                                 <th>Hora Fin</th>
+                                <th>Vigencia</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -48,6 +49,13 @@
                                     <td scope="row">{{ $horario->dia }}</td>
                                     <td scope="row" class="text-center">{{ $horario->hora_inicio->format('h:i A') }}</td>
                                     <td scope="row" class="text-center">{{ $horario->hora_fin->format('h:i A') }}</td>
+                                    <td scope="row" class="text-center">
+                                        @if ($horario->fecha_inicio && $horario->fecha_fin)
+                                            {{ $horario->fecha_inicio->format('d/m/Y') }} - {{ $horario->fecha_fin->format('d/m/Y') }}
+                                        @else
+                                            <span class="text-muted">Sin definir</span>
+                                        @endif
+                                    </td>
                                     <td scope="row">
                                         <div class="btn-group" role="group" aria-label="basic example">
 
@@ -235,6 +243,8 @@
                     modal.find('#edit-dia').val(data.horario.dia);
                     modal.find('#edit-hora_inicio').val(data.horario.hora_inicio);
                     modal.find('#edit-hora_fin').val(data.horario.hora_fin);
+                    modal.find('#edit-fecha_inicio').val(data.horario.fecha_inicio);
+                    modal.find('#edit-fecha_fin').val(data.horario.fecha_fin);
                 },
                 error: function(xhr) {
                     console.error('Error al cargar los datos del horario:', xhr);

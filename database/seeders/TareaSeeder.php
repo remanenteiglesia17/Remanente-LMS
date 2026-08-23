@@ -10,17 +10,9 @@ use Illuminate\Database\Seeder;
 
 class TareaSeeder extends Seeder
 {
-    /**
-     * Crea las tareas/quizzes/parciales/proyecto de cada curso, ligadas
-     * a su módulo correspondiente. Esquema de pesos (suma 100%):
-     *   - 3 Tareas   -> 30% (10% c/u)
-     *   - 2 Quizzes  -> 20% (10% c/u)
-     *   - 2 Parciales-> 30% (15% c/u)
-     *   - 1 Proyecto -> 20%
-     */
     public function run(): void
     {
-        $inicioCurso = Carbon::now()->subWeeks(6); // el curso empezó hace 6 semanas
+        $inicioCurso = Carbon::now()->subWeeks(6);
 
         $contenido = [
             'ANT-2026' => [
@@ -57,34 +49,39 @@ class TareaSeeder extends Seeder
 
         foreach ($contenido as $codigoCurso => $data) {
             $curso = Curso::where('codigo', $codigoCurso)->first();
-            if (!$curso) {
-                continue;
-            }
+            if (!$curso) continue;
 
             $modulos = Modulo::where('curso_id', $curso->id)->orderBy('orden')->get();
-            if ($modulos->count() < 3) {
-                continue;
-            }
+            if ($modulos->count() < 3) continue;
+
             [$m1, $m2, $m3] = [$modulos[0], $modulos[1], $modulos[2]];
 
-            // ---------- Módulo 1: Tarea 1, Tarea 2, Quiz 1 ----------
-            $this->crearTarea($curso->id, $m1->id, 'tarea', $data['tareas'][0], $inicioCurso->copy()->addWeek(), 10);
-            $this->crearTarea($curso->id, $m1->id, 'tarea', $data['tareas'][1], $inicioCurso->copy()->addWeeks(2), 10);
-            $this->crearTarea($curso->id, $m1->id, 'quiz', $data['quizzes'][0], $inicioCurso->copy()->addWeeks(2)->addDays(2), 10);
+            // Módulo 1 (Tareas: 10% peso, Nota Max: 5.0)
+            $this->crearTarea($curso->id, $m1->id, 'tarea', $data['tareas'][0], $inicioCurso->copy()->addWeek(), peso: 10, puntajeMaximo: 5.0);
+            $this->crearTarea($curso->id, $m1->id, 'tarea', $data['tareas'][1], $inicioCurso->copy()->addWeeks(2), peso: 10, puntajeMaximo: 5.0);
+            $this->crearTarea($curso->id, $m1->id, 'quiz', $data['quizzes'][0], $inicioCurso->copy()->addWeeks(2)->addDays(2), peso: 10, puntajeMaximo: 5.0);
 
-            // ---------- Módulo 2: Tarea 3, Quiz 2, Parcial I ----------
-            $this->crearTarea($curso->id, $m2->id, 'tarea', $data['tareas'][2], $inicioCurso->copy()->addWeeks(3), 10);
-            $this->crearTarea($curso->id, $m2->id, 'quiz', $data['quizzes'][1], $inicioCurso->copy()->addWeeks(3)->addDays(3), 10);
-            $this->crearTarea($curso->id, $m2->id, 'examen', $data['parciales'][0], $inicioCurso->copy()->addWeeks(4), 15);
+            // Módulo 2
+            $this->crearTarea($curso->id, $m2->id, 'tarea', $data['tareas'][2], $inicioCurso->copy()->addWeeks(3), peso: 10, puntajeMaximo: 5.0);
+            $this->crearTarea($curso->id, $m2->id, 'quiz', $data['quizzes'][1], $inicioCurso->copy()->addWeeks(3)->addDays(3), peso: 10, puntajeMaximo: 5.0);
+            $this->crearTarea($curso->id, $m2->id, 'examen', $data['parciales'][0], $inicioCurso->copy()->addWeeks(4), peso: 15, puntajeMaximo: 5.0);
 
-            // ---------- Módulo 3 (en curso): Parcial II (recién cerrado), Proyecto (aún abierto) ----------
-            $this->crearTarea($curso->id, $m3->id, 'examen', $data['parciales'][1], Carbon::now()->subDays(2), 15);
-            $this->crearTarea($curso->id, $m3->id, 'proyecto', $data['proyecto'], Carbon::now()->addWeeks(2), 20, Carbon::now()->subWeeks(2));
+            // Módulo 3
+            $this->crearTarea($curso->id, $m3->id, 'examen', $data['parciales'][1], Carbon::now()->subDays(2), peso: 15, puntajeMaximo: 5.0);
+            $this->crearTarea($curso->id, $m3->id, 'proyecto', $data['proyecto'], Carbon::now()->addWeeks(2), peso: 20, puntajeMaximo: 5.0, aperturaOverride: Carbon::now()->subWeeks(2));
         }
     }
 
-    private function crearTarea(int $cursoId, int $moduloId, string $tipo, string $titulo, Carbon $fechaEntrega, float $puntaje, ?Carbon $aperturaOverride = null): void
-    {
+    private function crearTarea(
+        int $cursoId, 
+        int $moduloId, 
+        string $tipo, 
+        string $titulo, 
+        Carbon $fechaEntrega, 
+        float $peso, 
+        float $puntajeMaximo = 5.0, 
+        ?Carbon $aperturaOverride = null
+    ): void {
         Tarea::create([
             'curso_id' => $cursoId,
             'modulo_id' => $moduloId,
@@ -101,13 +98,14 @@ class TareaSeeder extends Seeder
             'criterios_evaluacion' => 'Comprensión del contenido, argumentación y cumplimiento de los requisitos.',
             'fecha_entrega' => $fechaEntrega,
             'permite_entregas_tardias' => $tipo === 'tarea' || $tipo === 'proyecto',
-            'penalizacion_tardia' => $tipo === 'tarea' || $tipo === 'proyecto' ? 10 : 0,
+            'penalizacion_tardia' => ($tipo === 'tarea' || $tipo === 'proyecto') ? 10 : 0,
             'visible' => true,
             'intentos_permitidos' => 1,
             'formato_entrega' => $tipo === 'quiz' ? 'texto' : 'archivo',
             'formatos_aceptados' => $tipo === 'quiz' ? null : '.pdf,.docx',
             'tamanio_maximo' => 20,
-            'puntaje' => $puntaje,
+            'puntaje' => $puntajeMaximo, // Escala de 0.0 a 5.0
+            'peso' => $peso,            // Porcentaje asignado (10%, 15%, 20%)
         ]);
     }
 }

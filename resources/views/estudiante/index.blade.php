@@ -74,7 +74,7 @@
                                 <th>Concepto</th>
                                 <th>Tipo</th>
                                 <th class="text-center">Nota</th>
-                                <th class="text-center">Porcentaje</th>
+                                <th class="text-center">Puntaje</th>
                                 <th class="text-center">Aporte</th>
                                 <th>Observaciones</th>
                             </tr>
@@ -104,7 +104,7 @@
                                         </strong>
                                         <small class="text-muted">/ {{ $calif->nota_maxima }}</small>
                                     </td>
-                                    <td class="text-center">{{ $calif->porcentaje }}%</td>
+                                    <td class="text-center">{{ number_format($calif->nota_maxima, 2) }}</td>
                                     <td class="text-center">
                                         {{ number_format($calif->aporte_nota_final, 2) }}
                                     </td>

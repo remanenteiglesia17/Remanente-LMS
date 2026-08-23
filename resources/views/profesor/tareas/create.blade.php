@@ -45,29 +45,14 @@
                                 @enderror
                             </div>
 
-                            {{-- Módulo (NUEVO) --}}
+                            {{-- Módulo --}}
                             <div class="form-group">
-                                <label for="modulo_id">Módulo (Opcional)</label>
-                                <select name="modulo_id" id="modulo_id" 
-                                        class="form-control @error('modulo_id') is-invalid @enderror">
+                                <label for="modulo_id">Módulo <span class="text-danger">*</span></label>
+                                <select name="modulo_id" id="modulo_id"
+                                        class="form-control @error('modulo_id') is-invalid @enderror" required>
                                     <option value="">-- Seleccione un módulo --</option>
                                 </select>
                                 @error('modulo_id')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            {{-- Parcial --}}
-                            <div class="form-group">
-                                <label for="parcial_id">Parcial (Opcional)</label>
-                                <select name="parcial_id" id="parcial_id" 
-                                        class="form-control @error('parcial_id') is-invalid @enderror">
-                                    <option value="">-- Seleccione un parcial --</option>
-                                </select>
-                                <small class="form-text text-muted">
-                                    Si esta tarea/quiz pertenece a un parcial, su nota se promediará junto a las demás tareas de ese parcial.
-                                </small>
-                                @error('parcial_id')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -243,15 +228,15 @@
                                        name="puntaje" 
                                        id="puntaje" 
                                        class="form-control @error('puntaje') is-invalid @enderror" 
-                                       value="{{ old('puntaje', 100) }}"
+                                       value="{{ old('puntaje', 5) }}"
                                        min="0"
-                                       max="100"
-                                       step="0.01"
+                                       max="5"
+                                       step="0.1"
                                        required>
                                 @error('puntaje')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
-                                <small class="text-muted">Escala 0-100</small>
+                                <small class="text-muted">Escala 0.0 - 5.0</small>
                             </div>
 
                             {{-- Permitir Entregas Tardías --}}
@@ -360,7 +345,6 @@
 <script>
     const cursosData = @json($cursos);
     const oldModuloId = "{{ old('modulo_id') }}";
-    const oldParcialId = "{{ old('parcial_id') }}";
 
     function cargarModulos(cursoId, selectedModuloId = null) {
         const moduloSelect = document.getElementById('modulo_id');
@@ -380,27 +364,8 @@
         }
     }
 
-    function cargarParciales(cursoId, selectedParcialId = null) {
-        const parcialSelect = document.getElementById('parcial_id');
-        parcialSelect.innerHTML = '<option value="">-- Seleccione un parcial --</option>';
-
-        const curso = cursosData.find(c => c.id == cursoId);
-        if (curso && curso.parciales && curso.parciales.length > 0) {
-            curso.parciales.forEach(par => {
-                const option = document.createElement('option');
-                option.value = par.id;
-                option.textContent = par.nombre;
-                if (selectedParcialId && selectedParcialId == par.id) {
-                    option.selected = true;
-                }
-                parcialSelect.appendChild(option);
-            });
-        }
-    }
-
     document.getElementById('curso_id').addEventListener('change', function() {
         cargarModulos(this.value);
-        cargarParciales(this.value);
     });
 
     // Preview de archivos
@@ -435,7 +400,6 @@
         const cursoIdInicial = document.getElementById('curso_id').value;
         if (cursoIdInicial) {
             cargarModulos(cursoIdInicial, oldModuloId);
-            cargarParciales(cursoIdInicial, oldParcialId);
         }
     });
 </script>

@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Academico\Profesor\TareaController; 
 use App\Http\Controllers\Academico\Profesor\ModuloController as ProfesorModuloController;
-use App\Http\Controllers\Academico\Profesor\ParcialController;
 use App\Http\Controllers\Academico\Profesor\CalificacionController;
 use App\Http\Controllers\Academico\CursoController;
 
@@ -135,13 +134,6 @@ Route::prefix('profesor/modulos')->middleware(['auth', 'role:profesor'])->name('
     Route::delete('/{modulo}', [ProfesorModuloController::class, 'destroy'])->name('destroy');
 });
 
-Route::prefix('profesor/parciales')->middleware(['auth', 'role:profesor'])->name('profesor.parciales.')->group(function () {
-    Route::get('/', [ParcialController::class, 'index'])->name('index');
-    Route::post('/', [ParcialController::class, 'store'])->name('store');
-    Route::put('/{parcial}', [ParcialController::class, 'update'])->name('update');
-    Route::delete('/{parcial}', [ParcialController::class, 'destroy'])->name('destroy');
-});
-
 Route::get('profesor/calificaciones/visual', function () {
     return view('profesor.calificaciones.visual');})->name('profesor.calificaciones.visual');
 
@@ -154,8 +146,8 @@ Route::prefix('profesor/calificaciones')->middleware(['auth', 'role:profesor'])-
     Route::get('/', [CalificacionController::class, 'index'])->name('index');                                                           // Ver todas las calificaciones de sus cursos
     // Route::get('/curso/{curso}', [CalificacionController::class, 'porCurso'])->name('por-curso');                                       // Ver calificaciones de un curso específico
     // Route::get('/estudiante/{estudiante}/curso/{curso}', [CalificacionController::class, 'porEstudiante'])->name('por-estudiante');     // Ver calificaciones de un estudiante en un curso
-    Route::get('/create', [CalificacionController::class, 'create'])->name('create'); 
     Route::post('/registrar', [CalificacionController::class, 'store'])->name('store'); 
+    Route::post('/planilla', [CalificacionController::class, 'guardarPlanilla'])->name('planilla');
     Route::get('/{entrega}/revision', [CalificacionController::class, 'revision'])->name('revision');                                                // Crear/actualizar calificación
     // Route::get('/{calificacion}/editar', [CalificacionController::class, 'edit'])->name('edit');
     // Route::put('/{calificacion}', [CalificacionController::class, 'update'])->name('update');
@@ -205,3 +197,8 @@ Route::middleware('auth')->group(function () {
 use App\Http\Controllers\Admin\NotificationController;
 Route::get('/notifications',        [NotificationController::class, 'index'])->name('notifications.index');
 Route::get('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+
+// ========== VER PLATAFORMA COMO ESTUDIANTE (impersonación) ==========
+use App\Http\Controllers\Admin\ImpersonateController;
+Route::get('/impersonate/estudiante/{estudiante}', [ImpersonateController::class, 'verComoEstudiante'])->name('impersonate.estudiante');
+Route::get('/impersonate/detener', [ImpersonateController::class, 'detener'])->name('impersonate.detener');

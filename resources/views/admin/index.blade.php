@@ -125,6 +125,51 @@
             </div>
         </div>
     @endif
+
+    @if (isset($miHorario) && ($esProfesor || Auth::user()->estudiante))
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fa-solid fa-calendar-days mr-1"></i> Mi horario</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Día</th>
+                                    <th>Hora</th>
+                                    <th>Curso</th>
+                                    @if ($esProfesor === false && Auth::user()->estudiante)
+                                        <th>Profesor</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($miHorario as $horario)
+                                    <tr>
+                                        <td>{{ ucfirst(strtolower($horario->dia)) }}</td>
+                                        <td>{{ $horario->hora_inicio->format('h:i A') }} - {{ $horario->hora_fin->format('h:i A') }}</td>
+                                        <td>{{ $horario->cursos->pluck('nombre')->join(', ') }}</td>
+                                        @if ($esProfesor === false && Auth::user()->estudiante)
+                                            <td>
+                                                {{ $horario->profesores->map(fn($p) => $p->nombres . ' ' . $p->apellidos)->join(', ') }}
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Aún no tiene un horario asignado.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row pt-3">
         {{-- Configuracion --}}
         @can('admin.config.index')

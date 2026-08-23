@@ -14,13 +14,11 @@ class Calificacion extends Model
     protected $fillable = [
         'estudiante_id',
         'curso_id',
-        'parcial_id',
         'profesor_id',
         'entrega_id',
         'concepto',
         'nota',
         'nota_maxima',
-        'porcentaje',
         'tipo_evaluacion',
         'periodo',
         'fecha_calificacion',
@@ -31,7 +29,6 @@ class Calificacion extends Model
     protected $casts = [
         'nota' => 'decimal:2',
         'nota_maxima' => 'decimal:2',
-        'porcentaje' => 'integer',
         'fecha_calificacion' => 'date',
         'publicada' => 'boolean',
     ];
@@ -52,11 +49,6 @@ public function estudiante()
     public function curso()
     {
         return $this->belongsTo(Curso::class);
-    }
-
-    public function parcial()
-    {
-        return $this->belongsTo(Parcial::class);
     }
 
     public function profesor()
@@ -116,10 +108,14 @@ public function estudiante()
         return round(($this->nota / $this->nota_maxima) * 100, 2);
     }
 
-    /** Calcular el aporte de esta calificación a la nota final */
+    /**
+     * Aporte de esta calificación a la nota final: en el sistema por puntos,
+     * es simplemente la nota obtenida (los puntos que suma junto a las
+     * demás evaluaciones sobre el total de puntajes máximos del curso).
+     */
     public function getAporteNotaFinalAttribute()
     {
-        return round(($this->nota / $this->nota_maxima) * ($this->porcentaje / 100) * $this->nota_maxima, 2);
+        return round((float) $this->nota, 2);
     }
 
     /**
@@ -168,7 +164,13 @@ public function estudiante()
     }
 
     /**
-     * Calcular promedio ponderado de un estudiante en un curso
+     * Calcular promedio ponderado de un estudiante en un curso.
+     *
+     * El "peso" de cada evaluación es su propio puntaje máximo
+     * (nota_maxima, igual al puntaje de la tarea/quiz/examen que la generó),
+     * no un porcentaje artificial. Es un promedio por puntos:
+     * suma de notas obtenidas / suma de notas máximas posibles, escalado a
+     * la escala de calificación del curso (0.0 - 5.0).
      */
     public static function promedioPonderadoEstudianteCurso($estudianteId, $cursoId)
     {
@@ -181,103 +183,21 @@ public function estudiante()
             return 0;
         }
 
-        $sumaPonderada = 0;
-        $sumaPorcentajes = 0;
+        $sumaNotas = 0;
+        $sumaMaximos = 0;
 
         foreach ($calificaciones as $calif) {
-            // Opción A: nota ya en escala 0-5, porcentaje = peso en la nota final
-            // nota * (porcentaje / 100) = aporte directo a la nota final
-            $sumaPonderada   += $calif->nota * ($calif->porcentaje / 100);
-            $sumaPorcentajes += $calif->porcentaje;
+            $sumaNotas   += $calif->nota;
+            $sumaMaximos += $calif->nota_maxima ?: 5;
         }
 
-        if ($sumaPorcentajes == 0) {
+        if ($sumaMaximos == 0) {
             return 0;
         }
 
-        // Si los porcentajes no suman 100 (calificaciones parciales),
-        // escalar para dar una nota representativa del avance actual
-        $promedioPonderado = $sumaPorcentajes < 100
-            ? ($sumaPonderada / $sumaPorcentajes) * 100
-            : $sumaPonderada;
+        $promedio = ($sumaNotas / $sumaMaximos) * 5;
 
-        return round($promedioPonderado, 2);
-    }
-
-    /**
-     * Nota final de un estudiante en un curso, calculada por parciales dentro
-     * del rango de fechas del curso (fecha_inicio - fecha_fin).
-     *
-     * Cada parcial puede tener n tareas/quices; la nota del parcial es el
-     * promedio de esas calificaciones. La nota final es el promedio (o
-     * promedio ponderado, si los parciales tienen % definido) de los
-     * parciales que tengan al menos una calificación en el rango del curso.
-     */
-    public static function notaFinalEstudianteCurso($estudianteId, $cursoId): ?array
-    {
-        $curso = Curso::find($cursoId);
-
-        if (!$curso) {
-            return null;
-        }
-
-        $query = self::where('estudiante_id', $estudianteId)
-            ->where('curso_id', $cursoId)
-            ->where('publicada', true);
-
-        if ($curso->fecha_inicio) {
-            $query->whereDate('fecha_calificacion', '>=', $curso->fecha_inicio);
-        }
-        if ($curso->fecha_fin) {
-            $query->whereDate('fecha_calificacion', '<=', $curso->fecha_fin);
-        }
-
-        $calificaciones = $query->get();
-
-        if ($calificaciones->isEmpty()) {
-            return [
-                'nota_final' => null,
-                'parciales' => [],
-            ];
-        }
-
-        $porParcial = $calificaciones->groupBy('parcial_id');
-        $parcialesInfo = [];
-        $notas = [];
-        $pesos = [];
-
-        foreach ($porParcial as $parcialId => $grupo) {
-            $notaGrupo = round((float) $grupo->avg('nota'), 2);
-            $parcial = $parcialId ? Parcial::find($parcialId) : null;
-
-            $parcialesInfo[] = [
-                'parcial' => $parcial,
-                'nombre' => $parcial->nombre ?? 'Sin parcial asignado',
-                'nota' => $notaGrupo,
-                'porcentaje' => $parcial->porcentaje ?? null,
-                'total_evaluaciones' => $grupo->count(),
-            ];
-
-            $notas[] = $notaGrupo;
-            $pesos[] = $parcial->porcentaje ?? null;
-        }
-
-        // Si todos los parciales presentes tienen % definido y suman > 0, se
-        // usa promedio ponderado; si no, cada parcial pesa lo mismo.
-        if (!in_array(null, $pesos, true) && array_sum($pesos) > 0) {
-            $sumaPesos = array_sum($pesos);
-            $notaFinal = 0;
-            foreach ($notas as $i => $nota) {
-                $notaFinal += $nota * ($pesos[$i] / $sumaPesos);
-            }
-        } else {
-            $notaFinal = collect($notas)->avg();
-        }
-
-        return [
-            'nota_final' => round((float) $notaFinal, 2),
-            'parciales' => $parcialesInfo,
-        ];
+        return round($promedio, 2);
     }
 
     public static function estadisticasCurso($cursoId)

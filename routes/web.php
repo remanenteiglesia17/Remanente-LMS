@@ -124,10 +124,7 @@ Route::middleware('auth')->prefix('notificaciones')->name('notificaciones.')->gr
 });
 
 
-// 2. Ruta para descargar el Certificado PDF
-Route::get('/certificado/descargar/{course}', [CertificateController::class, 'generateCertificate'])
-    ->middleware('auth')
-    ->name('certificate.download');
-Route::get('/certificado/descargar/{course}', [App\Http\Controllers\CertificateController::class, 'generate'])
+// Ruta para descargar el Certificado PDF (disponible cuando el estudiante completó el curso)
+Route::get('/certificado/descargar/{course}', [CertificateController::class, 'generate'])
     ->middleware(['auth', 'role:estudiante'])
     ->name('certificate.download');

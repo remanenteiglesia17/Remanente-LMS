@@ -105,6 +105,9 @@ class AsistenciaController extends Controller
                     $duracionHoras, 
                     $estado
                 );
+
+                // Reprobar automáticamente si acumula 3 inasistencias injustificadas
+                $this->verificarInasistenciasYReprobar($estudianteId, $clase->curso_id);
             }
 
             // Marcar clase como dictada
@@ -177,14 +180,68 @@ class AsistenciaController extends Controller
             'observaciones' => 'nullable|string|max:500'
         ]);
 
-        $asistencia = Asistencia::findOrFail($asistenciaId);
-        
+        $asistencia = Asistencia::with('clase')->findOrFail($asistenciaId);
+
         $asistencia->update([
             'estado' => 'excusado',
             'observaciones' => $request->observaciones,
         ]);
 
+        // Al excusar, recalculamos: si ya no llega a 3 inasistencias injustificadas
+        // y el curso había sido reprobado únicamente por esta causa, se revierte.
+        if ($asistencia->clase) {
+            $this->verificarInasistenciasYReprobar($asistencia->estudiante_id, $asistencia->clase->curso_id);
+        }
+
         return redirect()->back()->with('success', 'Inasistencia excusada correctamente');
+    }
+
+    /**
+     * Número de inasistencias injustificadas ('ausente') que hacen reprobar
+     * automáticamente el curso.
+     */
+    private const LIMITE_INASISTENCIAS_INJUSTIFICADAS = 3;
+
+    /**
+     * Revisa las inasistencias injustificadas del estudiante en un curso y,
+     * si alcanza el límite, marca la inscripción como reprobada. Si el
+     * estudiante ya no alcanza el límite (por ejemplo tras excusar una
+     * inasistencia) y el estado actual es 'reprobado', lo regresa a 'activo'.
+     */
+    private function verificarInasistenciasYReprobar($estudianteId, $cursoId)
+    {
+        $inasistenciasInjustificadas = Asistencia::where('estudiante_id', $estudianteId)
+            ->where('estado', 'ausente')
+            ->whereHas('clase', function ($query) use ($cursoId) {
+                $query->where('curso_id', $cursoId);
+            })
+            ->count();
+
+        $inscripcion = DB::table('estudiante_curso')
+            ->where('estudiante_id', $estudianteId)
+            ->where('curso_id', $cursoId)
+            ->first();
+
+        if (!$inscripcion) {
+            return;
+        }
+
+        if ($inasistenciasInjustificadas >= self::LIMITE_INASISTENCIAS_INJUSTIFICADAS) {
+            if ($inscripcion->estado !== 'reprobado') {
+                DB::table('estudiante_curso')
+                    ->where('estudiante_id', $estudianteId)
+                    ->where('curso_id', $cursoId)
+                    ->update(['estado' => 'reprobado']);
+            }
+        } elseif ($inscripcion->estado === 'reprobado') {
+            // Solo revertimos si estaba reprobado por inasistencias; si ya no
+            // alcanza el límite, regresa a 'activo' para que el profesor
+            // pueda seguir calificándolo normalmente.
+            DB::table('estudiante_curso')
+                ->where('estudiante_id', $estudianteId)
+                ->where('curso_id', $cursoId)
+                ->update(['estado' => 'activo']);
+        }
     }
 
     /**

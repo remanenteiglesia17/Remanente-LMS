@@ -60,6 +60,21 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-3"><!-- Fecha inicio -->
+                            <div class="form-group">
+                                <label for="edit-fecha_inicio">Fecha Inicio</label>
+                                <input type="date" id="edit-fecha_inicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3"><!-- Fecha fin -->
+                            <div class="form-group">
+                                <label for="edit-fecha_fin">Fecha Fin</label>
+                                <input type="date" id="edit-fecha_fin" name="fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-footer">

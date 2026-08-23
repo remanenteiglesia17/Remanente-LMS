@@ -114,8 +114,8 @@
                             {{-- Quizzes (20%) --}}
                             <th colspan="2" class="text-center bg-warning">Quizzes (20%)</th>
 
-                            {{-- Parciales (30%) --}}
-                            <th colspan="2" class="text-center bg-primary">Parciales (30%)</th>
+                            {{-- Exámenes (30%) --}}
+                            <th colspan="2" class="text-center bg-primary">Exámenes (30%)</th>
 
                             {{-- Proyecto (20%) --}}
                             <th rowspan="2" class="align-middle text-center bg-success">Proyecto<br>(20%)</th>
@@ -134,9 +134,9 @@
                             <th class="text-center bg-warning-light">Q1</th>
                             <th class="text-center bg-warning-light">Q2</th>
 
-                            {{-- Parciales --}}
-                            <th class="text-center bg-primary-light">P1</th>
-                            <th class="text-center bg-primary-light">P2</th>
+                            {{-- Exámenes --}}
+                            <th class="text-center bg-primary-light">E1</th>
+                            <th class="text-center bg-primary-light">E2</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -473,7 +473,7 @@
         new Chart(ctxCat, {
             type: 'pie',
             data: {
-                labels: ['Tareas', 'Quizzes', 'Parciales', 'Proyecto'],
+                labels: ['Tareas', 'Quizzes', 'Exámenes', 'Proyecto'],
                 datasets: [{
                     data: [4.2, 3.9, 3.9, 4.1],
                     backgroundColor: [

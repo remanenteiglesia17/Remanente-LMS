@@ -50,14 +50,16 @@ class HomeController extends Controller
             $proximasClases = collect();
             $totalMisEstudiantes = 0;
             $entregasPendientes = 0;
+            $miHorario = collect();
 
             if (Auth::user()->profesor) {
                 $esProfesor = true;
                 $profesorData = $this->handleProfesorDashboard(Auth::user()->profesor);
                 extract($profesorData);
+                $miHorario = $this->obtenerHorarioProfesor(Auth::user()->profesor->id);
             }
 
-            return view('admin.index', compact('total_usuarios', 'total_cursos', 'total_secretarias', 'total_estudiantes', 'total_profesores', 'total_horarios', 'total_clases', 'total_agendas', 'cursosDisponibles', 'profesorSelect', 'total_configuraciones', 'role', 'esProfesor', 'misCursos', 'proximasClases', 'totalMisEstudiantes', 'entregasPendientes'));
+            return view('admin.index', compact('total_usuarios', 'total_cursos', 'total_secretarias', 'total_estudiantes', 'total_profesores', 'total_horarios', 'total_clases', 'total_agendas', 'cursosDisponibles', 'profesorSelect', 'total_configuraciones', 'role', 'esProfesor', 'misCursos', 'proximasClases', 'totalMisEstudiantes', 'entregasPendientes', 'miHorario'));
         } else {
             $estudianteId = Auth::user()->estudiante->id;
             $cursos = Auth::user()->estudiante->cursos;
@@ -69,8 +71,9 @@ class HomeController extends Controller
             $proximasClases = collect();
             $totalMisEstudiantes = 0;
             $entregasPendientes = 0;
+            $miHorario = $this->obtenerHorarioEstudiante($estudianteId);
 
-            return view('admin.index', compact('total_usuarios', 'total_secretarias', 'total_estudiantes', 'total_cursos', 'total_profesores', 'total_horarios', 'total_clases', 'total_agendas', 'cursos', 'profesorSelect', 'cursosDisponibles', 'total_configuraciones', 'esProfesor', 'misCursos', 'proximasClases', 'totalMisEstudiantes', 'entregasPendientes'));
+            return view('admin.index', compact('total_usuarios', 'total_secretarias', 'total_estudiantes', 'total_cursos', 'total_profesores', 'total_horarios', 'total_clases', 'total_agendas', 'cursos', 'profesorSelect', 'cursosDisponibles', 'total_configuraciones', 'esProfesor', 'misCursos', 'proximasClases', 'totalMisEstudiantes', 'entregasPendientes', 'miHorario'));
         }
     }
 
@@ -239,6 +242,49 @@ class HomeController extends Controller
             'profesorSelect' => $profesorSelect,
             'cursosDisponibles' => $cursosDisponibles,
         ];
+    }
+
+    /**
+     * Orden natural de los días de la semana usado para ordenar el horario
+     * en el dashboard.
+     */
+    private const ORDEN_DIAS = ['LUNES' => 1, 'MARTES' => 2, 'MIERCOLES' => 3, 'JUEVES' => 4, 'VIERNES' => 5, 'SABADO' => 6, 'DOMINGO' => 7];
+
+    /**
+     * Horario semanal del profesor autenticado, para mostrar en su dashboard.
+     */
+    private function obtenerHorarioProfesor($profesorId)
+    {
+        return Horario::where('profesor_id', $profesorId)
+            ->with('cursos')
+            ->get()
+            ->sortBy(fn ($horario) => self::ORDEN_DIAS[$horario->dia] ?? 99)
+            ->values();
+    }
+
+    /**
+     * Horario semanal de los cursos en los que está inscrito el estudiante
+     * autenticado, para mostrar en su dashboard.
+     */
+    private function obtenerHorarioEstudiante($estudianteId)
+    {
+        $cursoIds = DB::table('estudiante_curso')
+            ->where('estudiante_id', $estudianteId)
+            ->pluck('curso_id');
+
+        if ($cursoIds->isEmpty()) {
+            return collect();
+        }
+
+        return Horario::whereHas('cursos', function ($q) use ($cursoIds) {
+                $q->whereIn('cursos.id', $cursoIds);
+            })
+            ->with(['cursos' => function ($q) use ($cursoIds) {
+                $q->whereIn('cursos.id', $cursoIds);
+            }, 'profesores'])
+            ->get()
+            ->sortBy(fn ($horario) => self::ORDEN_DIAS[$horario->dia] ?? 99)
+            ->values();
     }
 
     private function handleClientRole($estudianteId)

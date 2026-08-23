@@ -24,10 +24,6 @@ class Curso extends Model
         'fecha_fin' => 'date',
     ];
 
-    public function parciales()
-    {
-        return $this->hasMany(Parcial::class)->orderBy('numero');
-    }
     public function objetivos()
     {
         return $this->hasMany(Objetivo::class);

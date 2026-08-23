@@ -158,6 +158,8 @@ public function show_datos_cursos($id)
                     'dia' => 'required',
                     'hora_inicio' => 'required|date_format:H:i',
                     'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
+                    'fecha_inicio' => 'required|date',
+                    'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
                     'profesor_id' => 'required|exists:profesors,id',
                     'cursos' => 'required|array|min:1',
                     'cursos.*' => 'exists:cursos,id',
@@ -243,6 +245,8 @@ public function show_datos_cursos($id)
                 'dia' => $validatedData['dia'],
                 'hora_inicio' => $horaInicio,
                 'hora_fin' => $horaFin,
+                'fecha_inicio' => $validatedData['fecha_inicio'],
+                'fecha_fin' => $validatedData['fecha_fin'],
                 'profesor_id' => $validatedData['profesor_id'],
             ]);
 
@@ -348,6 +352,8 @@ public function show_datos_cursos($id)
             'dia' => 'required',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fin' => 'required|date_format:H:i',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
             'curso_id' => 'required',
         ]);
         // Actualizar datos propios del horario
@@ -355,6 +361,8 @@ public function show_datos_cursos($id)
             'dia' => $request->dia,
             'hora_inicio' => $request->hora_inicio,
             'hora_fin' => $request->hora_fin,
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
         ]);
 
         $horario->profesores()->syncWithPivotValues(

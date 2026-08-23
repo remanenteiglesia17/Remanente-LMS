@@ -4,97 +4,105 @@
 @section('title', 'Mis Tareas - ' . $curso->nombre)
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h1>{{ $curso->nombre }}</h1>
-            <small class="text-muted">
-                @if ($modulo)
-                    Tareas del Módulo {{ $modulo->orden }}: {{ $modulo->nombre }}
-                @else
-                    Tareas del curso
-                @endif
-            </small>
-        </div>
-        <div class="text-right">
-            <span class="badge badge-primary d-block mb-1">Estudiante</span>
-            <a href="{{ route('estudiante.modulos.index') }}" class="btn btn-sm btn-secondary">
-                <i class="fas fa-arrow-left"></i> Volver a módulos
-            </a>
-        </div>
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1>{{ $curso->nombre }}</h1>
+        <small class="text-muted">
+            @if ($modulo)
+                Tareas del Módulo {{ $modulo->orden }}: {{ $modulo->nombre }}
+            @else
+                Tareas del curso
+            @endif
+        </small>
     </div>
+    <div class="text-right">
+        <span class="badge badge-primary d-block mb-1">Estudiante</span>
+        <a href="{{ route('estudiante.modulos.index') }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a módulos
+        </a>
+    </div>
+</div>
 @stop
 
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card card-primary card-outline card-outline-tabs"> 
-                    <div class="card-body">
-                        <div class="row" id="main-content">
-                            {{-- Lista de tareas --}}
-                            <div class="col-lg-8" id="tasks-column">
-                                <div id="tasks-list">
-                                    <h4 class="mb-3">Tareas del Módulo</h4>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary card-outline card-outline-tabs">
+                <div class="card-body">
+                    <div class="row" id="main-content">
+                        {{-- Lista de tareas --}}
+                        <div class="col-lg-8" id="tasks-column">
+                            <div id="tasks-list">
+                                <h4 class="mb-3">Tareas del Módulo</h4>
 
-                                    @forelse ($tareas as $tarea)
-                                        <div class="card card-primary card-outline mb-3">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div>
-                                                        <h5>{{ $tarea->titulo_tarea  }}</h5>
-                                                        <p class="text-muted">{{ $tarea->descripcion_tarea }}</p>
-                                                    </div>
-                                                    <span class="badge {{ $tarea->badge_class }}">
-                                                        {{ ucfirst($tarea->estado) }}
+                                @forelse ($tareas as $tarea)
+                                    <div class="card card-primary card-outline mb-3">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h5>{{ $tarea->titulo_tarea  }}</h5>
+                                                    <p class="text-muted">{{ $tarea->descripcion_tarea }}</p>
+                                                    <span class="badge badge-secondary">
+                                                        <i class="fas fa-percentage"></i> Peso:
+                                                        {{ number_format($tarea->peso, 0) }}%
+                                                    </span>
+                                                    <span class="badge badge-light">
+                                                        <i class="fas fa-star"></i> Nota Máx:
+                                                        {{ number_format($tarea->puntaje, 1) }}
                                                     </span>
                                                 </div>
-                                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                                    <small class="text-muted">
-                                                        <i class="far fa-calendar"></i> 
-                                                        Fecha límite: {{ $tarea->fecha_entrega->format('d M Y') }}
+                                                <span class="badge {{ $tarea->badge_class }}">
+                                                    {{ ucfirst($tarea->estado) }}
+                                                </span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <small class="text-muted">
+                                                    <i class="far fa-calendar"></i>
+                                                    Fecha límite: {{ $tarea->fecha_entrega->format('d M Y') }}
+                                                </small>
+                                                @if($tarea->estado === 'pendiente')
+                                                    <small class="text-danger font-weight-bold">
+                                                        Faltan {{ $tarea->dias_restantes }}
+                                                        {{ $tarea->dias_restantes == 1 ? 'día' : 'días' }}
                                                     </small>
-                                                    @if($tarea->estado === 'pendiente')
-                                                        <small class="text-danger font-weight-bold">
-                                                            Faltan {{ $tarea->dias_restantes }} 
-                                                            {{ $tarea->dias_restantes == 1 ? 'día' : 'días' }}
-                                                        </small>
-                                                    @elseif($tarea->estado === 'atrasado')
-                                                        <small class="text-danger font-weight-bold">
-                                                            Atrasado
-                                                        </small>
-                                                    @endif
-                                                </div>
-                                                <div class="progress mt-2" style="height: 6px;">
-                                                    <div class="progress-bar" role="progressbar" 
-                                                         style="width: {{ $tarea->progreso }}%"></div>
-                                                </div>
-                                                <div class="mt-2">
-                                                    <a class="btn btn-sm btn-primary"
-                                                        href="{{ route('estudiante.tareas.show', $tarea->id) }}">
-                                                        <i class="fas fa-eye"></i> Ver detalles y entregar
-                                                    </a>
-                                                </div>
+                                                @elseif($tarea->estado === 'atrasado')
+                                                    <small class="text-danger font-weight-bold">
+                                                        Atrasado
+                                                    </small>
+                                                @endif
+                                            </div>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar" role="progressbar"
+                                                    style="width: {{ $tarea->progreso }}%"></div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <a class="btn btn-sm btn-primary"
+                                                    href="{{ route('estudiante.tareas.show', $tarea->id) }}">
+                                                    <i class="fas fa-eye"></i> Ver detalles y entregar
+                                                </a>
                                             </div>
                                         </div>
-                                    @empty
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle"></i> 
-                                            No hay tareas disponibles en este momento.
-                                        </div>
-                                    @endforelse
-                                </div>
-                            </div> 
-                            
-                            <div class="col-lg-4">
-                                {{-- Recursos del curso --}}
-                                @include('estudiante.partials.recursos')
+                                    </div>
+                                @empty
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        No hay tareas disponibles en este momento.
+                                    </div>
+                                @endforelse
                             </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            {{-- Recursos del curso --}}
+                            @include('estudiante.partials.recursos')
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 @stop
 
 @section('css')

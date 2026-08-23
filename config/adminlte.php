@@ -346,12 +346,6 @@ return [
             'route' => 'admin.profesor.modulos.index',
             'can' => 'admin.profesor.modulos.index',
         ],
-        [
-            'text' => 'Parciales',
-            'icon' => 'fas fa-calendar-check',
-            'route' => 'admin.profesor.parciales.index',
-            'can' => 'admin.profesor.parciales.index',
-        ],
 
         // [
         //     'text' => 'Reportes',

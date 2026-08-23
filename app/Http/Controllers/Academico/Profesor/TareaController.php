@@ -62,7 +62,7 @@ class TareaController extends Controller
         $profesor = $user->profesor;
 
         // Obtener cursos del profesor
-        $cursos = $profesor->cursos()->with(['modulos', 'parciales'])->get();
+        $cursos = $profesor->cursos()->with('modulos')->get();
 
         if ($cursos->isEmpty()) {
             return redirect()->back()->with([
@@ -77,18 +77,25 @@ class TareaController extends Controller
 
     public function store(Request $request)
     {
+        // Reemplazar reglas de validación en store() y update():
         $validate = $request->validate([
             'curso_id' => 'required|exists:cursos,id',
-            'modulo_id'=> 'nullable|exists:modulos,id',
-            'parcial_id'=> 'nullable|exists:parciales,id',
+            'modulo_id' => 'required|exists:modulos,id',
             'tipo' => 'required|in:tarea,quiz,examen,proyecto,foro',
             'titulo_tarea' => 'required|string|max:255',
             'descripcion_tarea' => 'required|string',
+            'requisitos' => 'nullable|string',
+            'criterios_evaluacion' => 'nullable|string',
+            'fecha_apertura' => 'nullable|date',
             'fecha_entrega' => 'required|date',
-            'puntaje' => 'required|numeric|min:0|max:100',
+            'puntaje' => 'required|numeric|min:0|max:5',  // Escala de calificación (0.0 a 5.0)
+            'peso' => 'required|numeric|min:0|max:100',   // Porcentaje asignado (0% a 100%)
+            'penalizacion_tardia' => 'nullable|numeric|min:0',
+            'formato_entrega' => 'required|in:archivo,enlace,texto,ambos',
+            'documentos' => 'nullable|array',
             'documentos.*' => 'nullable|file|max:51200',
         ]);
-        // ]);
+
         $user = Auth::user();
         // Validamos existencia de usuario y profesor ANTES de usar la propiedad
         if (!$user || !$user->profesor) {
@@ -100,12 +107,15 @@ class TareaController extends Controller
             return redirect()->back()->with(['swal' => '1', 'info' => 'Sin acceso a este curso.', 'icon' => 'error']);
         }
 
-        if ($request->filled('parcial_id') && !\App\Models\Parcial::where('id', $request->parcial_id)->where('curso_id', $request->curso_id)->exists()) {
-            return redirect()->back()->withInput()->with(['swal' => '1', 'info' => 'El parcial seleccionado no pertenece a este curso.', 'icon' => 'error']);
+        if (!\App\Models\Modulo::where('id', $validate['modulo_id'])->where('curso_id', $request->curso_id)->exists()) {
+            return redirect()->back()->withInput()->with(['swal' => '1', 'info' => 'El módulo seleccionado no pertenece a este curso.', 'icon' => 'error']);
         }
 
         try {
             \DB::beginTransaction();
+
+            $validate['permite_entregas_tardias'] = $request->boolean('permite_entregas_tardias');
+            $validate['visible'] = $request->boolean('visible');
 
             // Creamos la tarea quitando la clave 'documentos' del array
             $tarea = Tarea::create(collect($validate)->except('documentos')->toArray());
@@ -152,9 +162,9 @@ class TareaController extends Controller
             'No tienes acceso a esta tarea.'
         );
 
-        $tarea->load(['curso', 'documentos', 'entregas.user']);
+        $tarea->load(['curso', 'documentos', 'entregas.estudiante.user']);
 
-        return view('admin.profesor.tareas.show', compact('tarea'));
+        return view('profesor.tareas.show', compact('tarea'));
     }
     /**
      * Editar tarea
@@ -175,7 +185,7 @@ class TareaController extends Controller
             }
 
             // Traemos los cursos para el <select> de la vista
-            $cursos = $profesor->cursos()->with(['modulos', 'parciales'])->get();
+            $cursos = $profesor->cursos()->with('modulos')->get();
 
             return view('profesor.tareas.edit', compact('tarea', 'cursos'));
         } catch (\Exception $e) {
@@ -195,18 +205,20 @@ class TareaController extends Controller
 
         $data = $request->validate([
             'curso_id' => 'required|exists:cursos,id',
-            'modulo_id'=> 'nullable|exists:modulos,id',
-            'parcial_id'=> 'nullable|exists:parciales,id',
+            'modulo_id'=> 'required|exists:modulos,id',
             'tipo' => 'required|in:tarea,quiz,examen,proyecto,foro',
             'titulo_tarea' => 'required|string|max:255',
             'descripcion_tarea' => 'required|string',
+            'requisitos' => 'nullable|string',
+            'criterios_evaluacion' => 'nullable|string',
 
             'fecha_apertura' => 'nullable|date',
             'fecha_entrega' => 'required|date',
 
-            'puntaje' => 'required|numeric|min:0|max:100',
+            'puntaje' => 'required|numeric|min:0|max:5',
 
             'penalizacion_tardia' => 'nullable|numeric|min:0',
+            'formato_entrega' => 'required|in:archivo,enlace,texto,ambos',
 
             'documentos' => 'nullable|array',
             'documentos.*' => 'nullable|file|max:51200',
@@ -223,8 +235,8 @@ class TareaController extends Controller
                 ]);
         }
 
-        if ($request->filled('parcial_id') && !\App\Models\Parcial::where('id', $request->parcial_id)->where('curso_id', $request->curso_id)->exists()) {
-            return redirect()->back()->withInput()->with(['swal' => '1', 'info' => 'El parcial seleccionado no pertenece a este curso.', 'icon' => 'error']);
+        if (!\App\Models\Modulo::where('id', $data['modulo_id'])->where('curso_id', $request->curso_id)->exists()) {
+            return redirect()->back()->withInput()->with(['swal' => '1', 'info' => 'El módulo seleccionado no pertenece a este curso.', 'icon' => 'error']);
         }
 
         try {
@@ -239,6 +251,7 @@ class TareaController extends Controller
 
             $data['permite_entregas_tardias'] =
                 $request->boolean('permite_entregas_tardias');
+            $data['visible'] = $request->boolean('visible');
 
             // No enviar documentos al modelo Tarea
             unset($data['documentos']);

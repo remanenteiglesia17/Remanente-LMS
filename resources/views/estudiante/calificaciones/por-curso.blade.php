@@ -86,7 +86,7 @@
                     <div class="card shadow-sm h-100 mb-0">
                         <div class="card-header bg-{{ $meta['color'] }} text-white">
                             <h3 class="card-title font-weight-bold">
-                                <i class="fas {{ $meta['icon'] }}"></i> {{ $meta['label'] }} (Peso: {{ $grupo['peso_total'] }}%)
+                                <i class="fas {{ $meta['icon'] }}"></i> {{ $meta['label'] }} (Puntos: {{ number_format($grupo['peso_total'], 2) }})
                             </h3>
                         </div>
                         <div class="card-body p-0 table-responsive">
@@ -95,7 +95,7 @@
                                     <tr>
                                         <th>Concepto</th>
                                         <th class="text-center">Nota</th>
-                                        <th class="text-center">Peso</th>
+                                        <th class="text-center">Puntos</th>
                                         <th class="text-center">Estado</th>
                                     </tr>
                                 </thead>
@@ -106,7 +106,7 @@
                                             <td class="text-center font-weight-bold text-{{ $calif->color }}">
                                                 {{ number_format($calif->nota, 2) }}
                                             </td>
-                                            <td class="text-center">{{ $calif->porcentaje }}%</td>
+                                            <td class="text-center">{{ number_format($calif->nota_maxima, 2) }}</td>
                                             <td class="text-center">
                                                 <span class="badge {{ $calif->nota >= 3.0 ? 'badge-success' : 'badge-danger' }}">
                                                     {{ $calif->nota >= 3.0 ? 'Aprobada' : 'Reprobada' }}
@@ -145,7 +145,7 @@
                             <th>Concepto</th>
                             <th>Tipo</th>
                             <th class="text-center">Nota / Máx</th>
-                            <th class="text-center">Peso</th>
+                            <th class="text-center">Puntos</th>
                             <th class="text-center">Aporte Final</th>
                             <th>Observaciones</th>
                         </tr>
@@ -178,7 +178,7 @@
                                     </strong> 
                                     <span class="text-muted">/ {{ $calif->nota_maxima }}</span>
                                 </td>
-                                <td class="text-center">{{ $calif->porcentaje }}%</td>
+                                <td class="text-center">{{ number_format($calif->nota_maxima, 2) }}</td>
                                 <td class="text-center font-weight-bold">
                                     {{ number_format($calif->aporte_nota_final, 2) }}
                                 </td>

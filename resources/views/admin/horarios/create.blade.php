@@ -148,6 +148,22 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="fecha_inicio">Fecha Inicio </label><b class="text-danger">*</b>
+                            <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" required>
+                            @error('fecha_inicio')
+                            <small class="bg-danger text-white p-1">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fecha_fin">Fecha Fin </label><b class="text-danger">*</b>
+                            <input type="date" class="form-control" name="fecha_fin" id="fecha_fin" value="{{ old('fecha_fin') }}" required>
+                            @error('fecha_fin')
+                            <small class="bg-danger text-white p-1">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
                             <button type="submit" class="btn btn-primary">
                                 @can('admin.horarios.crear_nuevos')
                                 <i class="fas fa-save"></i>
@@ -274,6 +290,21 @@ $('#profesor_id').on('change', function() {
                 Swal.fire({
                     title: "No fue posible",
                     text: "Por favor seleccione una hora entre 06:00 am y 8:00 pm",
+                    icon: "info"
+                });
+            }
+        });
+
+        const fechaInicio = document.getElementById('fecha_inicio');
+        const fechaFin = document.getElementById('fecha_fin');
+
+        fechaInicio.addEventListener('change', function() {
+            fechaFin.min = this.value;
+            if (fechaFin.value && fechaFin.value < this.value) {
+                fechaFin.value = '';
+                Swal.fire({
+                    title: "No fue posible",
+                    text: "La fecha fin no puede ser anterior a la fecha inicio.",
                     icon: "info"
                 });
             }

@@ -77,13 +77,11 @@ class CalificacionController extends Controller
                 [
                     'estudiante_id'    => $entrega->estudiante_id,
                     'curso_id'         => $tarea->curso_id,
-                    'parcial_id'       => $tarea->parcial_id,
                     'profesor_id'      => Auth::user()->profesor->id,
                     'concepto'         => $tarea->titulo_tarea,
                     'nota'             => $request->nota,
                     'nota_maxima'      => $tarea->puntaje,
-                    'porcentaje'       => $tarea->porcentaje ?? 100,
-                    'tipo_evaluacion'  => 'tarea',
+                    'tipo_evaluacion'  => $tarea->tipo,
                     'fecha_calificacion' => now(),
                     'observaciones'    => $request->observaciones,
                     'publicada'        => true
@@ -94,6 +92,88 @@ class CalificacionController extends Controller
             return back()->with('error', 'Error al procesar: ' . $e->getMessage());
         }
     }
+    /**
+     * Guarda en bloque las notas capturadas en la Planilla (vista tipo hoja
+     * de cálculo, un input por tarea y estudiante). A diferencia de store(),
+     * aquí no hay una Entrega de por medio: el profesor puede calificar
+     * directamente aunque el estudiante no haya subido nada.
+     */
+    public function guardarPlanilla(Request $request)
+    {
+        $request->validate([
+            'curso_id' => 'required|exists:cursos,id',
+            'notas' => 'required|array',
+        ]);
+
+        $profesor = Auth::user()->profesor;
+
+        $curso = $profesor->cursos()->where('cursos.id', $request->curso_id)->first();
+        abort_unless($curso, 403, 'No tienes acceso a este curso.');
+
+        $tareas = Tarea::where('curso_id', $curso->id)->get()->keyBy('id');
+
+        $guardadas = 0;
+        $omitidas = 0;
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($request->notas as $estudianteId => $tareasNotas) {
+                if (!is_array($tareasNotas)) {
+                    continue;
+                }
+
+                foreach ($tareasNotas as $tareaId => $valor) {
+                    if ($valor === null || $valor === '') {
+                        continue;
+                    }
+
+                    $tarea = $tareas->get($tareaId);
+                    if (!$tarea) {
+                        $omitidas++;
+                        continue;
+                    }
+
+                    if (!is_numeric($valor) || $valor < 0 || $valor > $tarea->puntaje) {
+                        $omitidas++;
+                        continue;
+                    }
+
+                    Calificacion::updateOrCreate(
+                        [
+                            'estudiante_id' => $estudianteId,
+                            'curso_id'      => $curso->id,
+                            'concepto'      => $tarea->titulo_tarea,
+                            'periodo'       => $curso->periodo,
+                        ],
+                        [
+                            'profesor_id'        => $profesor->id,
+                            'nota'               => $valor,
+                            'nota_maxima'        => $tarea->puntaje,
+                            'tipo_evaluacion'    => $tarea->tipo,
+                            'fecha_calificacion' => now(),
+                            'publicada'          => true,
+                        ]
+                    );
+
+                    $guardadas++;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Notas guardadas correctamente.',
+                'guardadas' => $guardadas,
+                'omitidas'  => $omitidas,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function revision($id)
     {
         $entrega = Entrega::with(['estudiante.user', 'tarea', 'calificacion'])->findOrFail($id);
@@ -196,7 +276,7 @@ class CalificacionController extends Controller
     {
         if (str_starts_with($concepto, 'T')) return 'tarea';
         if (str_starts_with($concepto, 'Q')) return 'quiz';
-        if (str_starts_with($concepto, 'P')) return 'parcial';
+        if (str_starts_with($concepto, 'P')) return 'examen';
         return 'otro';
     }
 

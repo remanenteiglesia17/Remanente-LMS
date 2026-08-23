@@ -107,7 +107,6 @@ class EntregaCalificacionSeeder extends Seeder
                         'concepto' => $tarea->titulo_tarea,
                         'nota' => $nota,
                         'nota_maxima' => self::NOTA_MAXIMA,
-                        'porcentaje' => (int) round($tarea->puntaje),
                         'tipo_evaluacion' => $this->mapaTipoEvaluacion[$tarea->tipo] ?? 'otro',
                         'periodo' => $curso->periodo,
                         'fecha_calificacion' => $fechaReal->copy()->addDays(mt_rand(1, 4)),

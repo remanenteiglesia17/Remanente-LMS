@@ -35,21 +35,13 @@
 
                         {{-- Módulo --}}
                         <div class="form-group">
-                            <label for="modulo_id">Módulo (Opcional)</label>
-                            <select name="modulo_id" id="modulo_id" class="form-control @error('modulo_id') is-invalid @enderror">
+                            <label for="modulo_id">Módulo <span class="text-danger">*</span></label>
+                            <select name="modulo_id" id="modulo_id" class="form-control @error('modulo_id') is-invalid @enderror" required>
                                 <option value="">-- Seleccione un módulo --</option>
                             </select>
-                        </div>
-
-                        {{-- Parcial --}}
-                        <div class="form-group">
-                            <label for="parcial_id">Parcial (Opcional)</label>
-                            <select name="parcial_id" id="parcial_id" class="form-control @error('parcial_id') is-invalid @enderror">
-                                <option value="">-- Seleccione un parcial --</option>
-                            </select>
-                            <small class="form-text text-muted">
-                                Si esta tarea/quiz pertenece a un parcial, su nota se promediará junto a las demás tareas de ese parcial.
-                            </small>
+                            @error('modulo_id')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group">
@@ -71,6 +63,26 @@
                         <div class="form-group">
                             <label for="descripcion_tarea">Descripción <span class="text-danger">*</span></label>
                             <textarea name="descripcion_tarea" id="descripcion_tarea" class="form-control @error('descripcion_tarea') is-invalid @enderror" rows="5" required>{{ old('descripcion_tarea', $tarea->descripcion_tarea) }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Requisitos y Criterios --}}
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-list-ul"></i> Requisitos y Criterios</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="requisitos">Requisitos (opcional)</label>
+                            <textarea name="requisitos" id="requisitos" class="form-control" rows="5"
+                                      placeholder="Lista los requisitos que debe cumplir la tarea...">{{ old('requisitos', $tarea->requisitos) }}</textarea>
+                            <small class="text-muted">Un requisito por línea</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="criterios_evaluacion">Criterios de Evaluación (opcional)</label>
+                            <textarea name="criterios_evaluacion" id="criterios_evaluacion" class="form-control" rows="5"
+                                      placeholder="Define cómo se evaluará la tarea...">{{ old('criterios_evaluacion', $tarea->criterios_evaluacion) }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -135,9 +147,27 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <label for="puntaje">Puntaje Máximo</label>
-                            <input type="number" name="puntaje" id="puntaje" class="form-control" value="{{ old('puntaje', $tarea->puntaje) }}">
-                        </div> 
+                            <label for="puntaje">Nota Máxima <span class="text-danger">*</span></label>
+                            <input type="number" name="puntaje" id="puntaje" class="form-control @error('puntaje') is-invalid @enderror" value="{{ old('puntaje', $tarea->puntaje ?? 5.0) }}" min="0" max="5" step="0.1" required>
+                            <small class="text-muted">Escala de evaluación (0.0 - 5.0)</small>
+                            @error('puntaje')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="peso">Porcentaje del Curso (%) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" name="peso" id="peso" class="form-control @error('peso') is-invalid @enderror" value="{{ old('peso', $tarea->peso) }}" min="0" max="100" step="0.01" placeholder="Ej. 10" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">Peso sobre la nota final (0.00% - 100.00%)</small>
+                            @error('peso')
+                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                            @enderror
+                        </div>
 
                         <div class="custom-control custom-checkbox mb-3">
                             <input type="checkbox" class="custom-control-input" id="permite_entregas_tardias" name="permite_entregas_tardias" 
@@ -146,8 +176,40 @@
                         </div>
 
                         <div id="div_penalizacion" class="form-group" style="display: none;">
-                            <label for="penalizacion_tardia">Penalización</label>
+                            <label for="penalizacion_tardia">Penalización (%)</label>
                             <input type="number" name="penalizacion_tardia" id="penalizacion_tardia" class="form-control" value="{{ old('penalizacion_tardia', $tarea->penalizacion_tardia) }}">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Formato de Entrega --}}
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-upload"></i> Formato de Entrega</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="formato_entrega">Tipo de Entrega <span class="text-danger">*</span></label>
+                            <select name="formato_entrega" id="formato_entrega" class="form-control @error('formato_entrega') is-invalid @enderror" required>
+                                <option value="archivo" {{ old('formato_entrega', $tarea->formato_entrega) == 'archivo' ? 'selected' : '' }}>Solo archivos</option>
+                                <option value="enlace" {{ old('formato_entrega', $tarea->formato_entrega) == 'enlace' ? 'selected' : '' }}>Solo enlace (URL)</option>
+                                <option value="texto" {{ old('formato_entrega', $tarea->formato_entrega) == 'texto' ? 'selected' : '' }}>Solo texto</option>
+                                <option value="ambos" {{ old('formato_entrega', $tarea->formato_entrega) == 'ambos' ? 'selected' : '' }}>Archivos y enlace</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Visibilidad --}}
+                <div class="card card-outline card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-eye"></i> Visibilidad</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="visible" name="visible"
+                                   {{ old('visible', $tarea->visible) ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="visible">Visible para estudiantes</label>
                         </div>
                     </div>
                 </div>
@@ -173,7 +235,6 @@
 <script>
     const cursosData = @json($cursos);
     const moduloActualId = "{{ old('modulo_id', $tarea->modulo_id) }}";
-    const parcialActualId = "{{ old('parcial_id', $tarea->parcial_id) }}";
 
     function cargarModulos(cursoId, selectedModuloId = null) {
         const moduloSelect = document.getElementById('modulo_id');
@@ -193,27 +254,8 @@
         }
     }
 
-    function cargarParciales(cursoId, selectedParcialId = null) {
-        const parcialSelect = document.getElementById('parcial_id');
-        parcialSelect.innerHTML = '<option value="">-- Seleccione un parcial --</option>';
-
-        const curso = cursosData.find(c => c.id == cursoId);
-        if (curso && curso.parciales && curso.parciales.length > 0) {
-            curso.parciales.forEach(par => {
-                const option = document.createElement('option');
-                option.value = par.id;
-                option.textContent = par.nombre;
-                if (selectedParcialId && selectedParcialId == par.id) {
-                    option.selected = true;
-                }
-                parcialSelect.appendChild(option);
-            });
-        }
-    }
-
     document.getElementById('curso_id').addEventListener('change', function() {
         cargarModulos(this.value);
-        cargarParciales(this.value);
     });
 
     function togglePenalizacion() {
@@ -235,7 +277,6 @@
         const cursoIdInicial = document.getElementById('curso_id').value;
         if (cursoIdInicial) {
             cargarModulos(cursoIdInicial, moduloActualId);
-            cargarParciales(cursoIdInicial, parcialActualId);
         }
     });
 </script>

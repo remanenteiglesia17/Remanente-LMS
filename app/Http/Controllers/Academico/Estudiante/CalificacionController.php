@@ -86,7 +86,7 @@ class CalificacionController extends Controller
         $porTipo = $calificaciones->groupBy('tipo_evaluacion')->map(function ($grupo) {
             return [
                 'items' => $grupo->sortBy('fecha_calificacion')->values(),
-                'peso_total' => $grupo->sum('porcentaje'),
+                'peso_total' => $grupo->sum('nota_maxima'),
                 'promedio' => round($grupo->avg('nota'), 2),
             ];
         });

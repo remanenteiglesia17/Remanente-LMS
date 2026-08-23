@@ -14,6 +14,14 @@
                 : '<i class="fa-solid fa-circle-xmark"></i>' !!}
         </button>
     </form>
+
+    @if (Auth::user()->hasAnyRole(['superAdmin', 'admin', 'root']) && $estudiante->user)
+        <a href="{{ route('admin.impersonate.estudiante', $estudiante->id) }}" class="btn btn-info btn-sm"
+            title="Ver la plataforma como este estudiante">
+            <i class="fas fa-user-graduate"></i>
+        </a>
+    @endif
+
     @if (Auth::user()->hasRole('root'))
         <form id="delete-form-{{ $estudiante->id }}" action="{{ route('admin.estudiantes.destroy', $estudiante->id) }}"
             method="POST">
