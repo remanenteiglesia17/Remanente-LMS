@@ -76,7 +76,6 @@ class TareaController extends Controller
 
     public function store(Request $request)
     {
-        // Reemplazar reglas de validación en store() y update():
         $validate = $request->validate([
             'curso_id' => 'required|exists:cursos,id',
             'modulo_id' => 'required|exists:modulos,id',

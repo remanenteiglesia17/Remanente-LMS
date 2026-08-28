@@ -1,28 +1,29 @@
-@extends('adminlte::page')
 
-@section('title', 'Libro de Calificaciones')
 
-@section('content_header')
+<?php $__env->startSection('title', 'Libro de Calificaciones'); ?>
+
+<?php $__env->startSection('content_header'); ?>
     <h1><i class="fas fa-book"></i> Gestión de Calificaciones</h1>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container-fluid">
-        {{-- Selector de Curso --}}
+        
         <div class="card card-outline card-primary shadow-sm">
             <div class="card-body">
-                <form action="{{ route('admin.profesor.calificaciones.index') }}" method="GET">
+                <form action="<?php echo e(route('admin.profesor.calificaciones.index')); ?>" method="GET">
                     <div class="row">
                         <div class="col-md-6">
                             <label>Cursos en su Horario:</label>
                             <select name="curso_id" class="form-control" onchange="this.form.submit()">
                                 <option value="">-- Seleccione un curso --</option>
-                                @foreach ($cursos as $curso)
-                                    <option value="{{ $curso->id }}"
-                                        {{ request('curso_id') == $curso->id ? 'selected' : '' }}>
-                                        {{ $curso->codigo }} - {{ $curso->nombre }}
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $cursos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $curso): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($curso->id); ?>"
+                                        <?php echo e(request('curso_id') == $curso->id ? 'selected' : ''); ?>>
+                                        <?php echo e($curso->codigo); ?> - <?php echo e($curso->nombre); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </select>
                         </div>
                     </div>
@@ -30,12 +31,12 @@
             </div>
         </div>
 
-        @if ($cursoSeleccionado)
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($cursoSeleccionado): ?>
             <div class="text-right mb-3">
-                <form action="{{ route('admin.profesor.calificaciones.finalizar-curso') }}" method="POST"
+                <form action="<?php echo e(route('admin.profesor.calificaciones.finalizar-curso')); ?>" method="POST"
                     onsubmit="return confirm('Esto evaluará a todos los estudiantes activos según su promedio y horas cumplidas, y cerrará el curso. ¿Continuar?');">
-                    @csrf
-                    <input type="hidden" name="curso_id" value="{{ $cursoSeleccionado->id }}">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="curso_id" value="<?php echo e($cursoSeleccionado->id); ?>">
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-flag-checkered"></i> Finalizar curso
                     </button>
@@ -44,7 +45,7 @@
 
             <div class="card shadow">
                 <div class="card-header bg-dark">
-                    <h3 class="card-title">Planilla: {{ $cursoSeleccionado->nombre }}</h3>
+                    <h3 class="card-title">Planilla: <?php echo e($cursoSeleccionado->nombre); ?></h3>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -53,67 +54,68 @@
                                 <tr>
                                     <th width="50" class="text-center">#</th>
                                     <th>Estudiante</th>
-                                    {{-- CABECERAS DINÁMICAS --}}
-                                    @foreach ($tareasDelCurso as $tarea)
+                                    
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $tareasDelCurso; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tarea): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <th class="text-center">
-                                            @if($tarea->modulo)
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tarea->modulo): ?>
                                                 <span class="badge badge-secondary d-block mb-1" style="font-size:10px">
-                                                    <i class="fas fa-layer-group"></i> {{ $tarea->modulo->nombre }}
+                                                    <i class="fas fa-layer-group"></i> <?php echo e($tarea->modulo->nombre); ?>
+
                                                 </span>
-                                            @endif
-                                            {{ $tarea->titulo_tarea }} <br>
-                                            <small class="badge badge-info">{{ number_format($tarea->puntaje, 1) }} pts</small>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                            <?php echo e($tarea->titulo_tarea); ?> <br>
+                                            <small class="badge badge-info"><?php echo e(number_format($tarea->puntaje, 1)); ?> pts</small>
                                         </th>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     <th class="text-center bg-gray-light">FINAL</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($estudiantes as $index => $estudiante)
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $estudiantes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $estudiante): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
-                                        <td class="text-center align-middle">{{ $index + 1 }}</td>
+                                        <td class="text-center align-middle"><?php echo e($index + 1); ?></td>
                                         <td class="align-middle">
-                                            <strong>{{ $estudiante->user->name }}</strong>
+                                            <strong><?php echo e($estudiante->user->name); ?></strong>
                                         </td>
 
-                                        {{-- INPUTS DINÁMICOS POR TAREA --}}
-                                        @foreach ($tareasDelCurso as $tarea)
+                                        
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $tareasDelCurso; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tarea): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <td class="text-center p-1" style="min-width: 130px;">
-                                                @php
+                                                <?php
                                                     $entrega = $estudiante->entregas->firstWhere('tarea_id', $tarea->id);
                                                     $calificacion = $estudiante->calificaciones->where('concepto', $tarea->titulo_tarea)->first();
-                                                @endphp
+                                                ?>
 
-                                                {{-- Input para la nota --}}
+                                                
                                                 <input type="number"
-                                                    name="notas[{{ $estudiante->id }}][{{ $tarea->id }}]"
+                                                    name="notas[<?php echo e($estudiante->id); ?>][<?php echo e($tarea->id); ?>]"
                                                     class="form-control form-control-sm text-center input-nota mb-1"
                                                     step="0.1" min="0" max="5"
-                                                    value="{{ $calificacion->nota ?? '' }}"
+                                                    value="<?php echo e($calificacion->nota ?? ''); ?>"
                                                     placeholder="0.0 – 5.0"
-                                                    data-peso="{{ $tarea->puntaje }}" data-max="5">
+                                                    data-peso="<?php echo e($tarea->puntaje); ?>" data-max="5">
 
-                                                @if ($entrega)
-                                                    {{-- Botón único de revisión --}}
-                                                    <a href="{{ route('admin.profesor.calificaciones.revision', $entrega->id) }}"
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($entrega): ?>
+                                                    
+                                                    <a href="<?php echo e(route('admin.profesor.calificaciones.revision', $entrega->id)); ?>"
                                                         class="btn btn-xs btn-primary btn-block shadow-sm">
                                                         <i class="fas fa-file-alt"></i> Ver Entrega
                                                     </a>
-                                                    @if ($entrega->entrega_tardia)
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($entrega->entrega_tardia): ?>
                                                         <small class="text-danger" style="font-size: 0.6rem;">
                                                             <i class="fas fa-clock"></i> Entregada tarde
                                                         </small>
-                                                    @endif
-                                                @else
+                                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                                <?php else: ?>
                                                     <span class="badge badge-secondary disabled"
                                                         style="font-size: 0.65rem; opacity: 0.6;">
                                                         Sin actividad
                                                     </span>
-                                                @endif
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                             </td>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                        @php
+                                        <?php
                                             $notaFinalBD = 0;
                                             $pesoBD = 0;
                                             foreach ($tareasDelCurso as $t) {
@@ -127,33 +129,34 @@
                                                 $notaFinalBD = ($notaFinalBD / $pesoBD) * 5;
                                             }
                                             $aprobadoBD = $pesoBD > 0 && $notaFinalBD >= 3.0;
-                                        @endphp
+                                        ?>
                                         
-                                        {{-- COLUMNA NOTA FINAL Y ESTADO --}}
+                                        
                                         <td class="text-center align-middle" style="min-width:90px">
-                                            <span class="badge nota-final {{ $pesoBD > 0 ? ($aprobadoBD ? 'badge-success' : 'badge-danger') : 'badge-secondary' }} d-block mb-1"
-                                                id="final-{{ $estudiante->id }}"
+                                            <span class="badge nota-final <?php echo e($pesoBD > 0 ? ($aprobadoBD ? 'badge-success' : 'badge-danger') : 'badge-secondary'); ?> d-block mb-1"
+                                                id="final-<?php echo e($estudiante->id); ?>"
                                                 style="font-size:14px;padding:5px 8px">
-                                                {{ $pesoBD > 0 ? number_format($notaFinalBD, 2) : '—' }}
+                                                <?php echo e($pesoBD > 0 ? number_format($notaFinalBD, 2) : '—'); ?>
+
                                             </span>
-                                            <span class="estado-final" id="estado-{{ $estudiante->id }}">
-                                                @if($pesoBD > 0 && $aprobadoBD)
+                                            <span class="estado-final" id="estado-<?php echo e($estudiante->id); ?>">
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($pesoBD > 0 && $aprobadoBD): ?>
                                                     <span class="badge badge-success" style="font-size:11px">
                                                         <i class="fas fa-check-circle"></i> Aprobado
                                                     </span>
-                                                @elseif($pesoBD > 0)
+                                                <?php elseif($pesoBD > 0): ?>
                                                     <span class="badge badge-danger" style="font-size:11px">
                                                         <i class="fas fa-times-circle"></i> Reprobado
                                                     </span>
-                                                @endif
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                             </span>
                                         </td>
                                     </tr>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
-                                        <td colspan="{{ count($tareasDelCurso) + 4 }}" class="text-center">No hay estudiantes.</td>
+                                        <td colspan="<?php echo e(count($tareasDelCurso) + 4); ?>" class="text-center">No hay estudiantes.</td>
                                     </tr>
-                                @endforelse
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -164,11 +167,11 @@
                     </button>
                 </div>
             </div>
-        @endif
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
     <script>
         $(document).ready(function() {
             calcularFinales();
@@ -214,7 +217,7 @@
         }
 
         function guardarTodo() {
-            const cursoId = {{ $cursoSeleccionado->id ?? 'null' }};
+            const cursoId = <?php echo e($cursoSeleccionado->id ?? 'null'); ?>;
             if (!cursoId) {
                 Swal.fire('Atención', 'Selecciona un curso primero.', 'warning');
                 return;
@@ -259,7 +262,7 @@
             });
 
             $.ajax({
-                url: '{{ route("admin.profesor.calificaciones.planilla") }}',
+                url: '<?php echo e(route("admin.profesor.calificaciones.planilla")); ?>',
                 method: 'POST',
                 data: {
                     _token: $('meta[name="csrf-token"]').attr('content'),
@@ -281,4 +284,5 @@
             });
         }
     </script>
-@stop
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\www\Remanente-LMS-Re\resources\views/profesor/calificaciones/index.blade.php ENDPATH**/ ?>

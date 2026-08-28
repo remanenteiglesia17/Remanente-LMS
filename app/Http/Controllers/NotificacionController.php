@@ -10,8 +10,14 @@ class NotificacionController extends Controller
     /** GET /notificaciones/unread — polling */
     public function unread()
     {
-        $user      = Auth::user();
-        $unread    = $user->unreadNotifications()->latest()->take(10)->get();
+        // 1. Liberar el archivo de sesión para que el polling de JS no bloquee peticiones concurrentes
+        session_write_close();
+
+        $user = Auth::user();
+        
+        $unread = $user->unreadNotifications()->latest()->take(10)->get();
+        
+        // 2. Usar count() directo sobre la relación
         $readCount = $user->readNotifications()->count();
 
         $items = $unread->map(fn($n) => [
@@ -30,10 +36,11 @@ class NotificacionController extends Controller
     /** GET /notificaciones/{id}/detail — datos completos para el modal */
     public function detail(string $id)
     {
+        session_write_close(); // Opcional pero recomendado en lecturas JSON
+
         $notif = Auth::user()->notifications()->where('id', $id)->firstOrFail();
         $data  = $notif->data;
 
-        // Enriquecer con datos frescos de la Tarea si existe
         $extra = [];
         if (!empty($data['tarea_id'])) {
             $tarea = Tarea::with('documentos')->find($data['tarea_id']);

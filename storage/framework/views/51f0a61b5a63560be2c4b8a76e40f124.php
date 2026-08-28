@@ -1,0 +1,1 @@
+<?php /**PATH C:\xampp\htdocs\www\Remanente-LMS-Re\resources\views/admin/cursos/content/documentos-show.blade.php ENDPATH**/ ?>

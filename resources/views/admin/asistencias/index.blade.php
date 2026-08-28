@@ -11,37 +11,44 @@
         <div class="col-md-12">
             <div class="card card-outline card-primary">
                 <div class="card-header">
-                    <h3 class="card-title">Lista</h3>
+                    <h3 class="card-title">Lista de Asistencias</h3>
                 </div>
                 <div class="card-body">
                     <form id="asistenciaForm" action="{{ route('admin.asistencias.store') }}" method="POST">
                         @csrf
                         <div class="table-responsive">
-                            <table id="asistencias" class="table table-bordered">
+                            <table id="asistencias" class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
                                         <th>Estudiante</th>
                                         <th>Clase</th>
                                         <th>Fecha</th>
-                                        <th>Asistió</th>
+                                        <th class="text-center">Asistió</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($clases as $clase)
-                                        <tr>
-                                            <td>{{ $clase->estudiante->nombres }}</td>
-                                            <td>{{ $clase->title }}</td>
-                                            <td>{{ $clase->start }}</td>
-                                            <td>
-                                        <input type="hidden" name="claseos[{{ $clase->id }}][estudiante_id]" 
-                                                value="{{ $clase->estudiante->id }}">
-                                                <input type="checkbox" name="claseos[{{ $clase->id }}][asistio]" 
-                                                value="1" 
-                                                {{ !empty($asistencias[$clase->id . '-' . $clase->estudiante->id]) && 
-                                                    $asistencias[$clase->id . '-' . $clase->estudiante->id]->asistio ? 'checked' : '' }} 
-                                                onchange="actualizarAsistencia({{ $clase->id }}, {{ $clase->estudiante->id }}, this.checked)">
-                                            </td>
-                                        </tr>
+                                        @foreach ($clase->estudiantes as $estudiante)
+                                            @php
+                                                $keyAsistencia = $clase->id . '-' . $estudiante->id;
+                                                $asistencia = $asistencias[$keyAsistencia] ?? null;
+                                                $asistio = $asistencia ? $asistencia->asistio : false;
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $estudiante->nombre_completo ?? ($estudiante->nombres . ' ' . $estudiante->apellidos) }}</td>
+                                                <td>{{ $clase->titulo }}</td>
+                                                <td>{{ $clase->fecha_hora_inicio ? $clase->fecha_hora_inicio->format('d/m/Y H:i') : 'N/A' }}</td>
+                                                <td class="text-center">
+                                                    <input type="hidden" name="clases[{{ $clase->id }}][{{ $estudiante->id }}][estudiante_id]" 
+                                                           value="{{ $estudiante->id }}">
+                                                    <input type="checkbox" 
+                                                           name="clases[{{ $clase->id }}][{{ $estudiante->id }}][asistio]" 
+                                                           value="1" 
+                                                           {{ $asistio ? 'checked' : '' }} 
+                                                           onchange="actualizarAsistencia({{ $clase->id }}, {{ $estudiante->id }}, this.checked)">
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                     @endforeach
                                 </tbody>
                             </table>
@@ -55,19 +62,28 @@
 
 @section('js')
     <script> 
-        new DataTable('#asistencias', {responsive: true,autoWidth: false,scrollX:true,scrollX: true,});
+        $(document).ready(function() {
+            $('#asistencias').DataTable({
+                responsive: true,
+                autoWidth: false,
+                scrollX: true,
+            });
+        });
 
-        function actualizarAsistencia(claseoId, estudianteId, asistio) {
-
-            const data = {                                              // Crear un objeto con los datos a enviar
+        function actualizarAsistencia(claseId, estudianteId, asistio) {
+            const data = {
                 _token: '{{ csrf_token() }}',
-                claseos: {[claseoId]: { estudiante_id: estudianteId, asistio: asistio ? 1 : 0}}
+                clase_id: claseId,
+                estudiante_id: estudianteId,
+                asistio: asistio ? 1 : 0
             };
 
-            fetch("{{ route('admin.asistencias.store') }}", {            // Realizar la solicitud POST usando Fetch API
+            fetch("{{ route('admin.asistencias.store') }}", {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify(data)
             })
@@ -83,4 +99,4 @@
             });
         }
     </script>
-@endsection
+@endsection 
