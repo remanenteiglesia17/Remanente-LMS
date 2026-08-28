@@ -9,7 +9,6 @@ class NotificationController extends Controller
 {
     public function index()
     {
-            // dd(Auth::user()->notifications()->get());
         $notifications = Auth::user()->notifications()->latest()->paginate(10);
         
         return view('admin.notifications.index', compact('notifications'));

@@ -1,10 +1,10 @@
 {{-- resources/views/estudiante/tareas/show.blade.php --}}
 @extends('adminlte::page')
 
-@section('title', $tarea->nombre)
+@section('title', $tarea->titulo_tarea)
 
 @section('content_header')
-    <h1>{{ $tarea->nombre }}</h1>
+    <h1>{{ $tarea->titulo_tarea }}</h1>
 @stop
 
 @section('content')
@@ -17,7 +17,7 @@
                             <i class="fas fa-arrow-left"></i> Volver a tareas
                         </a>
                         <h3 class="card-title">
-                            {{ $tarea->nombre }}
+                            {{ $tarea->titulo_tarea }}
                         </h3>
                         <div class="card-tools">
                             <span class="badge {{ $tarea->badge_class }}">
@@ -85,20 +85,30 @@
                                 @endforeach
                             </div>
                         @endif
-                        @if ($tarea->entregas->isEmpty())
-                            <h5 class="mt-4">Entrega de la tarea</h5>
+                        @php
+                            $entrega = $tarea->entregas->first();
+                            $puedeEditar = $entrega
+                                && !$entrega->calificacion
+                                && (!$tarea->fecha_entrega || !now()->gt($tarea->fecha_entrega) || $tarea->permite_entregas_tardias);
+                        @endphp
 
-                            <form action="{{ route('estudiante.entregas.store', $tarea) }}" method="POST"
-                                enctype="multipart/form-data" id="formEntrega">
+                        @if (!$entrega || $puedeEditar)
+                            <h5 class="mt-4">{{ $entrega ? 'Editar tu entrega' : 'Entrega de la tarea' }}</h5>
+
+                            <form action="{{ $entrega ? route('estudiante.entregas.update', $entrega) : route('estudiante.entregas.store', $tarea) }}"
+                                method="POST" enctype="multipart/form-data" id="formEntrega">
                                 @csrf
+                                @if ($entrega)
+                                    @method('PUT')
+                                @endif
                                 <input type="hidden" name="tarea_id" value="{{ $tarea->id }}">
 
                                 <div class="form-group">
-                                    <label>Subir archivo</label>
+                                    <label>{{ $entrega ? 'Reemplazar archivo (opcional)' : 'Subir archivo' }}</label>
                                     <div class="custom-file">
                                         <input type="file"
                                             class="custom-file-input @error('archivo') is-invalid @enderror" id="taskFile"
-                                            name="archivo" accept=".docx,.pdf,.jpg,.jpeg,.png">
+                                            name="archivo" accept=".docx,.pdf,.jpg,.jpeg,.png" {{ $entrega ? '' : 'required' }}>
                                         <label class="custom-file-label" for="taskFile">
                                             Seleccionar archivo
                                         </label>
@@ -114,7 +124,7 @@
                                 <div class="form-group">
                                     <label>Comentarios adicionales (opcional)</label>
                                     <textarea class="form-control @error('comentario') is-invalid @enderror" name="comentario" rows="4"
-                                        placeholder="Agrega cualquier comentario o nota para el instructor...">{{ old('comentario') }}</textarea>
+                                        placeholder="Agrega cualquier comentario o nota para el instructor...">{{ old('comentario', $entrega->comentario ?? '') }}</textarea>
                                     @error('comentario')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
@@ -122,13 +132,46 @@
 
                                 <div class="mt-4">
                                     <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-paper-plane"></i> Enviar tarea
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" onclick="saveDraft()">
-                                        <i class="fas fa-save"></i> Guardar borrador
+                                        <i class="fas fa-paper-plane"></i> {{ $entrega ? 'Guardar cambios' : 'Enviar tarea' }}
                                     </button>
                                 </div>
                             </form>
+                        @else
+                            <h5 class="mt-4">Tu entrega</h5>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="mb-1">
+                                        <strong>Enviado:</strong>
+                                        {{ $entrega->fecha_entrega ? \Carbon\Carbon::parse($entrega->fecha_entrega)->format('d/m/Y H:i') : '—' }}
+                                        @if ($entrega->entrega_tardia)
+                                            <span class="badge badge-warning ml-1">Entrega tardía</span>
+                                        @endif
+                                    </p>
+                                    @if ($entrega->archivo)
+                                        <p class="mb-1">
+                                            <a href="{{ asset('storage/'.$entrega->archivo) }}" target="_blank">
+                                                <i class="fas fa-file"></i> Ver archivo enviado
+                                            </a>
+                                        </p>
+                                    @endif
+                                    @if ($entrega->comentario)
+                                        <p class="mb-1"><strong>Tu comentario:</strong> {{ $entrega->comentario }}</p>
+                                    @endif
+
+                                    @if ($entrega->calificacion)
+                                        <hr>
+                                        <p class="mb-1">
+                                            <strong>Calificación:</strong>
+                                            {{ $entrega->calificacion->nota }}/{{ $tarea->puntaje }}
+                                        </p>
+                                        @if ($entrega->calificacion->observaciones)
+                                            <p class="mb-0"><strong>Comentario del profesor:</strong> {{ $entrega->calificacion->observaciones }}</p>
+                                        @endif
+                                    @elseif (!$puedeEditar)
+                                        <p class="text-muted mb-0">La fecha límite ya pasó. Tu entrega quedó registrada y está pendiente de calificación.</p>
+                                    @endif
+                                </div>
+                            </div>
                         @endif
                     </div>
                 </div>

@@ -33,7 +33,7 @@ class ConfigServiceProvider extends ServiceProvider
                         'adminlte.auth_logo' => [
                             'enabled' => true,
                             'img' => [
-                                'path'  => $config->logo,
+                                'path'  => '/storage/' .$config->logo,
                                 'alt'   => $config->site_name,
                                 'class' => 'brand-image img-circle elevation-3',
                                 'width' => 70,

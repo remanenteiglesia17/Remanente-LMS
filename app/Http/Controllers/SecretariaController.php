@@ -90,7 +90,6 @@ class SecretariaController extends Controller
         $secretaria->cc = $request->cc;
         $secretaria->telefono = $request->telefono;
         $secretaria->direccion = $request->direccion;
-        // dd($secretaria->fecha_nacimiento);
         $secretaria->fecha_nacimiento = Carbon::createFromFormat('Y-m-d', $request->fecha_nacimiento)->format('d/m/Y');
         $secretaria->save();
 

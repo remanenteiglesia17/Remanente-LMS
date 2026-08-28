@@ -1,3 +1,25 @@
+php artisan optimize:clear
+php artisan cache:clear
+php artisan view:clear
+php artisan log:clear
+
+## Auditoría de código muerto en Laravel
+* Sí (es un paquete diseñado exclusivamente para la estructura Laravel).
+composer require arafa/laravel-deadcode-detector --dev
+php artisan dead:scan
+-------------------------------------------------------------------------
+* No (es una herramienta PHP agnóstica a frameworks).
+composer require tomasvotruba/class-leak --dev
+vendor/bin/class-leak check app routes
+
+
+¿Cuál deberías usar según tu caso?
+Usa arafa/laravel-deadcode-detector si: Quieres limpiar la carpeta resources/views/ (plantillas duplicadas, vistas viejas, componentes Blade descontinuados como quemada.blade.php o original.blade.php).
+
+Usa tomasvotruba/class-leak si: Quieres limpiar la carpeta app/ (Controladores viejos que ya no están en routes/web.php, Requests form desinstalados o Service Classes huérfanas).
+
+Recomendación: Si estás haciendo una limpieza profunda (refactoring), lo ideal es correr ambos, ya que uno se encarga de la capa de presentación (Blade) y el otro de la capa lógica (PHP).
+
 # 🎓 Sistema de Gestión Académica (LMS) - REDEEMER
 
 <div align="center">

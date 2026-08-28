@@ -7,7 +7,12 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h1>{{ $curso->nombre }}</h1>
-            <small class="text-muted">Módulos del curso</small>
+            <small class="text-muted">
+                Módulos del curso
+                @if ($profesor)
+                    &middot; Dictado por {{ $profesor->nombres }} {{ $profesor->apellidos }}
+                @endif
+            </small>
         </div>
         <div>
             <span class="badge badge-primary">Estudiante</span>

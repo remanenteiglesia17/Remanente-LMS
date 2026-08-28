@@ -42,7 +42,23 @@ class ModuloController extends Controller
             'curso_id' => 'required|exists:cursos,id',
             'nombre' => 'required|string|max:150',
             'descripcion' => 'nullable|string|max:1000',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+            'peso_tarea' => 'required|numeric|min:0|max:100',
+            'peso_quiz' => 'required|numeric|min:0|max:100',
+            'peso_examen' => 'required|numeric|min:0|max:100',
+            'peso_proyecto' => 'required|numeric|min:0|max:100',
+            'peso_foro' => 'required|numeric|min:0|max:100',
         ]);
+
+        $sumaPesos = $data['peso_tarea'] + $data['peso_quiz'] + $data['peso_examen']
+            + $data['peso_proyecto'] + $data['peso_foro'];
+
+        if (abs($sumaPesos - 100) > 0.01) {
+            return back()->withInput()->withErrors([
+                'peso_categoria' => "La ponderación por categoría del módulo debe sumar 100%. Suma actual: {$sumaPesos}%.",
+            ]);
+        }
 
         $profesor = Auth::user()->profesor;
         abort_unless($profesor->cursos->contains($data['curso_id']), 403, 'Ese curso no es tuyo.');
@@ -54,9 +70,52 @@ class ModuloController extends Controller
             'nombre' => $data['nombre'],
             'descripcion' => $data['descripcion'] ?? null,
             'orden' => $siguienteOrden,
+            'fecha_inicio' => $data['fecha_inicio'],
+            'fecha_fin' => $data['fecha_fin'],
+            'peso_tarea' => $data['peso_tarea'],
+            'peso_quiz' => $data['peso_quiz'],
+            'peso_examen' => $data['peso_examen'],
+            'peso_proyecto' => $data['peso_proyecto'],
+            'peso_foro' => $data['peso_foro'],
         ]);
 
         return back()->with(['info' => 'Módulo creado correctamente.', 'icon' => 'success']);
+    }
+
+    /**
+     * Actualizar los datos de un módulo existente (fechas y ponderación
+     * por categoría). El nombre/descripción también se pueden ajustar
+     * aquí.
+     */
+    public function update(Request $request, Modulo $modulo)
+    {
+        $profesor = Auth::user()->profesor;
+        abort_unless($profesor->cursos->contains($modulo->curso_id), 403, 'Ese curso no es tuyo.');
+
+        $data = $request->validate([
+            'nombre' => 'required|string|max:150',
+            'descripcion' => 'nullable|string|max:1000',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+            'peso_tarea' => 'required|numeric|min:0|max:100',
+            'peso_quiz' => 'required|numeric|min:0|max:100',
+            'peso_examen' => 'required|numeric|min:0|max:100',
+            'peso_proyecto' => 'required|numeric|min:0|max:100',
+            'peso_foro' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $sumaPesos = $data['peso_tarea'] + $data['peso_quiz'] + $data['peso_examen']
+            + $data['peso_proyecto'] + $data['peso_foro'];
+
+        if (abs($sumaPesos - 100) > 0.01) {
+            return back()->withInput()->withErrors([
+                'peso_categoria' => "La ponderación por categoría del módulo debe sumar 100%. Suma actual: {$sumaPesos}%.",
+            ]);
+        }
+
+        $modulo->update($data);
+
+        return back()->with(['info' => 'Módulo actualizado correctamente.', 'icon' => 'success']);
     }
 
     /**

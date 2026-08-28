@@ -9,7 +9,7 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "endroid/qr-code": "^5.1",
         "guzzlehttp/guzzle": "^7.2",
-        "jeroennoten/laravel-adminlte": "^3.11",
+        "jeroennoten/laravel-adminlte": "^3.16",
         "laravel-lang/common": "^6.7",
         "laravel/framework": "^10.0",
         "laravel/jetstream": "^4.3",
@@ -28,7 +28,8 @@
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^7.0",
         "phpunit/phpunit": "^10.0",
-        "spatie/laravel-ignition": "^2.0"
+        "spatie/laravel-ignition": "^2.0",
+        "tomasvotruba/class-leak": "^2.1"
     },
     "autoload": {
         "psr-4": {

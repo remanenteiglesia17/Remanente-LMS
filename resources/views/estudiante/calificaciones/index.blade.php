@@ -34,13 +34,13 @@
                         <div class="card-body">
                             <div class="row text-center mb-3">
                                 <div class="col-6 border-right">
-                                    <span class="text-muted d-block small">Mi Nota Final</span>
+                                    <span class="text-muted d-block small">Mi promedio ponderado</span>
                                     <h2 class="font-weight-bold my-0 {{ $data['promedio'] >= 3.0 ? 'text-success' : 'text-danger' }}">
                                         {{ number_format($data['promedio'], 2) }}
                                     </h2>
                                 </div>
                                 <div class="col-6">
-                                    <span class="text-muted d-block small">Promedio del Curso</span>
+                                    <span class="text-muted d-block small">Promedio del grupo (todos los estudiantes)</span>
                                     <h2 class="font-weight-bold my-0 text-info">
                                         {{ number_format($data['promedio_curso'], 2) }}
                                     </h2>

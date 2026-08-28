@@ -22,9 +22,12 @@ class ConfigController extends Controller
         $config = Config::first();  
         return view('admin.config.index', compact('config'));
     }
-    // public function create()  {  return view('admin.config.create'); }
+    public function create()
+    {
+        return view('admin.config.create');
+    }
     public function store(Request $request)
-    { // dd($request->all());
+    { 
         $request->validate([
             'site_name'    => 'required|string',
             'email_contact'    => 'required|email',
@@ -45,7 +48,7 @@ class ConfigController extends Controller
             $file     = $request->file('logo');
             $nombre = time() . "_" . $file->getClientOriginalName();
             $ruta = $file->storeAs('logo', $nombre);
-            $url = 'storage/' . $ruta;
+            $url =  $ruta;
             $config->logo = $url;
             $config->save();
 

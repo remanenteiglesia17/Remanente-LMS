@@ -147,26 +147,9 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <label for="puntaje">Nota Máxima <span class="text-danger">*</span></label>
-                            <input type="number" name="puntaje" id="puntaje" class="form-control @error('puntaje') is-invalid @enderror" value="{{ old('puntaje', $tarea->puntaje ?? 5.0) }}" min="0" max="5" step="0.1" required>
-                            <small class="text-muted">Escala de evaluación (0.0 - 5.0)</small>
-                            @error('puntaje')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="peso">Porcentaje del Curso (%) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" name="peso" id="peso" class="form-control @error('peso') is-invalid @enderror" value="{{ old('peso', $tarea->peso) }}" min="0" max="100" step="0.01" placeholder="Ej. 10" required>
-                                <div class="input-group-append">
-                                    <span class="input-group-text">%</span>
-                                </div>
-                            </div>
-                            <small class="text-muted">Peso sobre la nota final (0.00% - 100.00%)</small>
-                            @error('peso')
-                                <span class="invalid-feedback d-block">{{ $message }}</span>
-                            @enderror
+                            <label>Nota Máxima</label>
+                            <p class="form-control-plaintext">5.0 (todas las tareas usan la misma escala de evaluación)</p>
+                            <input type="hidden" name="puntaje" value="5.0">
                         </div>
 
                         <div class="custom-control custom-checkbox mb-3">

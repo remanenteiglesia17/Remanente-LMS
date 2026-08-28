@@ -21,7 +21,6 @@ class EntregaController extends Controller
     public function store(Request $request)
     {
         $tarea = Tarea::findOrFail($request->tarea_id);
-        // dd($tarea->toArray());
 
         $request->validate([
             'archivo' => 'required|file|mimes:docx,pdf,jpg,jpeg,png|max:51200',
@@ -33,7 +32,13 @@ class EntregaController extends Controller
         // Evitar doble entrega (respaldo a la restricción unique)
         if ($tarea->entregas()->where('estudiante_id', $estudianteId)->exists()) {
             return back()->withErrors([
-                'archivo' => 'Ya enviaste esta tarea.',
+                'archivo' => 'Ya enviaste esta tarea. Si necesitas cambiar el archivo, edita tu entrega.',
+            ]);
+        }
+
+        if ($tarea->fecha_entrega && now()->gt($tarea->fecha_entrega) && !$tarea->permite_entregas_tardias) {
+            return back()->withErrors([
+                'archivo' => 'La fecha límite de esta tarea ya pasó y no admite entregas tardías.',
             ]);
         }
 
@@ -47,11 +52,54 @@ class EntregaController extends Controller
             'comentario'     => $request->comentario,
             'archivo'        => $rutaArchivo,
             'fecha_entrega'  => now(),
-            'entrega_tardia' => now()->gt($tarea->fecha_limite),
-            'estado'         => now()->gt($tarea->fecha_limite) ? 'tardia' : 'pendiente',
+            'entrega_tardia' => $tarea->fecha_entrega ? now()->gt($tarea->fecha_entrega) : false,
+            'estado'         => ($tarea->fecha_entrega && now()->gt($tarea->fecha_entrega)) ? 'tardia' : 'pendiente',
         ]);
 
         return back()->with('success', 'Entrega enviada correctamente');
+    }
+
+    /**
+     * El estudiante reemplaza el archivo/comentario de su propia entrega,
+     * siempre que aún no haya sido calificada y (si la tarea no admite
+     * entregas tardías) que la fecha límite no haya pasado.
+     */
+    public function update(Request $request, Entrega $entrega)
+    {
+        abort_unless($entrega->estudiante_id === auth()->user()->estudiante->id, 403);
+
+        $tarea = $entrega->tarea;
+
+        if ($entrega->calificacion) {
+            return back()->withErrors(['archivo' => 'Esta entrega ya fue calificada y no se puede modificar.']);
+        }
+
+        if ($tarea->fecha_entrega && now()->gt($tarea->fecha_entrega) && !$tarea->permite_entregas_tardias) {
+            return back()->withErrors(['archivo' => 'La fecha límite ya pasó, no puedes editar tu entrega.']);
+        }
+
+        $request->validate([
+            'archivo' => 'nullable|file|mimes:docx,pdf,jpg,jpeg,png|max:51200',
+            'comentario' => 'nullable|string',
+        ]);
+
+        $data = [
+            'comentario' => $request->comentario,
+            'fecha_entrega' => now(),
+            'entrega_tardia' => $tarea->fecha_entrega ? now()->gt($tarea->fecha_entrega) : false,
+            'estado' => ($tarea->fecha_entrega && now()->gt($tarea->fecha_entrega)) ? 'tardia' : 'pendiente',
+        ];
+
+        if ($request->hasFile('archivo')) {
+            if ($entrega->archivo) {
+                Storage::disk('public')->delete($entrega->archivo);
+            }
+            $data['archivo'] = $request->file('archivo')->store('entregas/tarea_' . $tarea->id, 'public');
+        }
+
+        $entrega->update($data);
+
+        return back()->with('success', 'Entrega actualizada correctamente');
     }
 
 

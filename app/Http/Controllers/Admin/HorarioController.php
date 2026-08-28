@@ -106,11 +106,11 @@ public function show_datos_cursos($id)
 
         $tieneCurso = !is_null($cursoAsignado);
 
-        // Si tiene curso, enviamos la lista de disponibles vacía. 
-        // Si no tiene, enviamos todos los cursos activos.
-        $cursosDisponibles = $tieneCurso 
-            ? [] 
-            : Curso::where('estado', 1)->get(['id', 'nombre']);
+        // Un profesor puede dictar más de un curso, así que siempre se
+        // ofrece la lista completa de cursos activos. 'curso_asignado' se
+        // conserva solo como dato informativo (para mostrar qué cursos ya
+        // tiene horario asignado), no para restringir la selección.
+        $cursosDisponibles = Curso::where('estado', 1)->get(['id', 'nombre']);
 
         // 2. LÓGICA DE TABLA DE HORARIOS (HTML)
         $horarios = Horario::where('profesor_id', $id)->with('cursos')->get();

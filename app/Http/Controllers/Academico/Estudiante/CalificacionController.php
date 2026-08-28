@@ -69,7 +69,7 @@ class CalificacionController extends Controller
         $calificaciones = Calificacion::where('estudiante_id', $estudiante->id)
             ->where('curso_id', $curso->id)
             ->where('publicada', true)
-            ->with('entrega')
+            ->with(['entrega', 'tarea.modulo'])
             ->orderBy('fecha_calificacion', 'desc')
             ->get();
 
@@ -82,20 +82,42 @@ class CalificacionController extends Controller
             'reprobadas' => $calificaciones->filter(fn($c) => $c->nota < 3.0)->count(),
         ];
 
-        // Agrupar con cálculos por tipo para la vista detallada
-        $porTipo = $calificaciones->groupBy('tipo_evaluacion')->map(function ($grupo) {
+        // Agrupar por módulo (estructura real de la ponderación) y, dentro de
+        // cada módulo, por tipo de actividad.
+        $modulos = \App\Models\Modulo::where('curso_id', $curso->id)->orderBy('orden')->get();
+
+        $porModulo = $modulos->map(function ($modulo) use ($calificaciones) {
+            $calificacionesModulo = $calificaciones->filter(
+                fn ($c) => $c->tarea && $c->tarea->modulo_id === $modulo->id
+            );
+
+            $pesosCategoria = $modulo->pesosPorCategoria();
+
+            $porTipo = $calificacionesModulo->groupBy('tipo_evaluacion')->map(function ($grupo, $tipo) use ($pesosCategoria) {
+                return [
+                    'items' => $grupo->sortBy('fecha_calificacion')->values(),
+                    'peso_categoria' => $pesosCategoria[$tipo] ?? 0,
+                    'cantidad' => $grupo->count(),
+                    'promedio' => round($grupo->avg('nota'), 2),
+                ];
+            });
+
             return [
-                'items' => $grupo->sortBy('fecha_calificacion')->values(),
-                'peso_total' => $grupo->sum('nota_maxima'),
-                'promedio' => round($grupo->avg('nota'), 2),
+                'modulo' => $modulo,
+                'por_tipo' => $porTipo,
+                'promedio_modulo' => \App\Models\Calificacion::notaModulo($modulo, $calificacionesModulo),
+                'tiene_calificaciones' => $calificacionesModulo->isNotEmpty(),
             ];
-        });
+        })->filter(fn ($m) => $m['tiene_calificaciones']);
+
+        $profesor = $curso->profesores()->with('user')->first();
 
         return view('estudiante.calificaciones.por-curso', compact(
             'curso',
             'calificaciones',
             'estadisticas',
-            'porTipo'
+            'porModulo',
+            'profesor'
         ));
     }
 }

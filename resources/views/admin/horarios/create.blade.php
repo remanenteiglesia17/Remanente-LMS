@@ -216,37 +216,25 @@ $('#profesor_id').on('change', function() {
         var select = $('#curso_select');
         select.empty();
 
-        if (response.tiene_curso) {
-            // Caso: El profesor YA tiene un curso asignado
-            // Añadimos el curso asignado como la única opción y la seleccionamos
-            select.append(`<option value="${response.curso_asignado.id}" selected>${response.curso_asignado.nombre}</option>`);
-            
-            // Bloqueamos la interacción pero NO usamos .prop('disabled', true) 
-            // para que el valor viaje en el formulario al hacer el submit.
-            select.css({
-                'pointer-events': 'none',
-                'background-color': '#e9ecef', // Color grisáceo de campo bloqueado
-                'cursor': 'not-allowed'
-            });
+        // Un profesor puede dictar más de un curso: siempre se muestra la
+        // lista completa y editable. Si ya tiene un curso con horario
+        // asignado, solo se le informa (no se bloquea la selección).
+        select.append('<option value="" disabled selected>Seleccione un curso</option>');
+        select.css({
+            'pointer-events': 'auto',
+            'background-color': '#ffffff',
+            'cursor': 'default'
+        });
 
-            console.log("Curso fijado automáticamente: " + response.curso_asignado.nombre);
-        } 
-        else {
-            // Caso: El profesor NO tiene curso, permitimos elegir de la lista
-            select.append('<option value="" disabled selected>Seleccione un curso</option>');
-            
-            // Restauramos estilo normal
-            select.css({
-                'pointer-events': 'auto',
-                'background-color': '#ffffff',
-                'cursor': 'default'
-            });
+        response.cursos.forEach(function(curso) {
+            var esElYaAsignado = response.tiene_curso && response.curso_asignado && curso.id === response.curso_asignado.id;
+            select.append(`<option value="${curso.id}"${esElYaAsignado ? ' selected' : ''}>${curso.nombre}${esElYaAsignado ? ' (ya tiene horario)' : ''}</option>`);
+        });
 
-            response.cursos.forEach(function(curso) {
-                select.append(`<option value="${curso.id}">${curso.nombre}</option>`);
-            });
+        if (response.mensaje) {
+            console.log(response.mensaje);
         }
-        
+
         // Gracias a que no refrescamos la página, el cursor no saltará el campo IVA
         // si el usuario sigue su flujo normal de tabulación o clic.
     }).fail(function() {

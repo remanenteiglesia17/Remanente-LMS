@@ -11,11 +11,11 @@ return new class extends Migration {
             $table->id(); // JD
             $table->string('nombres', 100);
             $table->string('apellidos', 100);
-            $table->integer('cc')->unique();
+            $table->string('cc', 20)->unique();
             $table->string('genero', 10);
-            $table->integer('telefono');
+            $table->string('telefono', 20);
             $table->string('direccion', 150);
-            $table->integer('contacto_emergencia')->nullable();
+            $table->string('contacto_emergencia', 10)->nullable();
             $table->string('observaciones', 255)->nullable();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

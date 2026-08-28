@@ -104,6 +104,7 @@ class EntregaCalificacionSeeder extends Seeder
                         'curso_id' => $curso->id,
                         'profesor_id' => $profesor->id,
                         'entrega_id' => $entrega->id,
+                        'tarea_id' => $tarea->id, // <-- resuelve Módulo (tarea->modulo) y permite calcular Aporte Final
                         'concepto' => $tarea->titulo_tarea,
                         'nota' => $nota,
                         'nota_maxima' => self::NOTA_MAXIMA,

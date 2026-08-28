@@ -6,7 +6,12 @@
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
             <h1 class="m-0 text-dark">{{ $curso->nombre }}</h1>
-            <p class="text-muted small mb-0">Código: {{ $curso->codigo }} | Período: {{ $curso->periodo }}</p>
+            <p class="text-muted small mb-0">
+                Código: {{ $curso->codigo }} | Período: {{ $curso->periodo }}
+                @if ($profesor)
+                    | Profesor: {{ $profesor->nombres }} {{ $profesor->apellidos }}
+                @endif
+            </p>
         </div>
         <a href="{{ route('estudiante.calificaciones.index') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Volver a Mis Cursos
@@ -73,62 +78,78 @@
             </div>
         </div>
 
-        {{-- Desglose por Tipo de Evaluación --}}
+        {{-- Desglose por Módulo y Criterio de Evaluación --}}
         <h4 class="mb-3 font-weight-bold text-secondary">
-            <i class="fas fa-layer-group"></i> Resumen por Criterio de Evaluación
+            <i class="fas fa-layer-group"></i> Resumen por Módulo
         </h4>
-        <div class="row">
-            @foreach($porTipo as $tipo => $grupo)
-                @php 
-                    $meta = $etiquetasTipo[$tipo] ?? ['label' => ucfirst($tipo), 'icon' => 'fa-star', 'color' => 'secondary']; 
-                @endphp
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm h-100 mb-0">
-                        <div class="card-header bg-{{ $meta['color'] }} text-white">
-                            <h3 class="card-title font-weight-bold">
-                                <i class="fas {{ $meta['icon'] }}"></i> {{ $meta['label'] }} (Puntos: {{ number_format($grupo['peso_total'], 2) }})
-                            </h3>
-                        </div>
-                        <div class="card-body p-0 table-responsive">
-                            <table class="table table-sm table-striped mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Concepto</th>
-                                        <th class="text-center">Nota</th>
-                                        <th class="text-center">Puntos</th>
-                                        <th class="text-center">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($grupo['items'] as $calif)
-                                        <tr>
-                                            <td>{{ $calif->concepto }}</td>
-                                            <td class="text-center font-weight-bold text-{{ $calif->color }}">
-                                                {{ number_format($calif->nota, 2) }}
-                                            </td>
-                                            <td class="text-center">{{ number_format($calif->nota_maxima, 2) }}</td>
-                                            <td class="text-center">
-                                                <span class="badge {{ $calif->nota >= 3.0 ? 'badge-success' : 'badge-danger' }}">
-                                                    {{ $calif->nota >= 3.0 ? 'Aprobada' : 'Reprobada' }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot class="bg-light">
-                                    <tr>
-                                        <th class="text-right">Promedio Parcial:</th>
-                                        <th class="text-center font-weight-bold">{{ number_format($grupo['promedio'], 2) }}</th>
-                                        <th class="text-center">{{ $grupo['peso_total'] }}%</th>
-                                        <th></th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+
+        @forelse($porModulo as $m)
+            @php $modulo = $m['modulo']; @endphp
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="card-title font-weight-bold">
+                        <i class="fas fa-book"></i> {{ $modulo->nombre }}
+                        @if ($modulo->fecha_inicio && $modulo->fecha_fin)
+                            <small class="ml-2">({{ $modulo->fecha_inicio->format('d/m/Y') }} - {{ $modulo->fecha_fin->format('d/m/Y') }})</small>
+                        @endif
+                    </h3>
+                    <span class="badge badge-light ml-2">Promedio del módulo: {{ number_format($m['promedio_modulo'], 2) }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach($m['por_tipo'] as $tipo => $grupo)
+                            @php
+                                $meta = $etiquetasTipo[$tipo] ?? ['label' => ucfirst($tipo), 'icon' => 'fa-star', 'color' => 'secondary'];
+                            @endphp
+                            <div class="col-md-6 mb-4">
+                                <div class="card shadow-sm h-100 mb-0">
+                                    <div class="card-header bg-{{ $meta['color'] }} text-white">
+                                        <h3 class="card-title font-weight-bold">
+                                            <i class="fas {{ $meta['icon'] }}"></i> {{ $meta['label'] }} (Vale {{ number_format($grupo['peso_categoria'], 1) }}% de este módulo)
+                                        </h3>
+                                    </div>
+                                    <div class="card-body p-0 table-responsive">
+                                        <table class="table table-sm table-striped mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Concepto</th>
+                                                    <th class="text-center">Nota</th>
+                                                    <th class="text-center">Estado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($grupo['items'] as $calif)
+                                                    <tr>
+                                                        <td>{{ $calif->concepto }}</td>
+                                                        <td class="text-center font-weight-bold text-{{ $calif->color }}">
+                                                            {{ number_format($calif->nota, 2) }} / {{ number_format($calif->nota_maxima, 2) }}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="badge {{ $calif->nota >= 3.0 ? 'badge-success' : 'badge-danger' }}">
+                                                                {{ $calif->nota >= 3.0 ? 'Aprobada' : 'Reprobada' }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                            <tfoot class="bg-light">
+                                                <tr>
+                                                    <th class="text-right">Promedio:</th>
+                                                    <th class="text-center font-weight-bold">{{ number_format($grupo['promedio'], 2) }}</th>
+                                                    <th></th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
-            @endforeach
-        </div>
+            </div>
+        @empty
+            <div class="alert alert-info">Todavía no hay calificaciones registradas en este curso.</div>
+        @endforelse
 
         {{-- Tabla Detallada e Histórica --}}
         <div class="card shadow-sm">
@@ -145,7 +166,7 @@
                             <th>Concepto</th>
                             <th>Tipo</th>
                             <th class="text-center">Nota / Máx</th>
-                            <th class="text-center">Puntos</th>
+                            <th>Módulo</th>
                             <th class="text-center">Aporte Final</th>
                             <th>Observaciones</th>
                         </tr>
@@ -178,7 +199,7 @@
                                     </strong> 
                                     <span class="text-muted">/ {{ $calif->nota_maxima }}</span>
                                 </td>
-                                <td class="text-center">{{ number_format($calif->nota_maxima, 2) }}</td>
+                                <td>{{ $calif->tarea->modulo->nombre ?? '—' }}</td>
                                 <td class="text-center font-weight-bold">
                                     {{ number_format($calif->aporte_nota_final, 2) }}
                                 </td>

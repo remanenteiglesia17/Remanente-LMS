@@ -59,9 +59,9 @@
             <div class="modal fade" id="calificar{{ $entrega->id }}">
                 <div class="modal-dialog">
                     <form method="POST"
-                        action="{{ route('profesor.entregas.calificar', $entrega) }}">
+                        action="{{ route('admin.profesor.calificaciones.store') }}">
                         @csrf
-                        @method('PUT')
+                        <input type="hidden" name="entrega_id" value="{{ $entrega->id }}">
 
                         <div class="modal-content">
                             <div class="modal-header">
@@ -72,15 +72,18 @@
                                 <div class="form-group">
                                     <label>Calificación</label>
                                     <input type="number"
-                                        name="calificacion"
+                                        name="nota"
                                         class="form-control"
+                                        min="0"
                                         max="{{ $tarea->puntaje }}"
-                                        value="{{ $entrega->calificacion }}">
+                                        step="0.01"
+                                        value="{{ $entrega->calificacion }}"
+                                        required>
                                 </div>
 
                                 <div class="form-group">
                                     <label>Comentario</label>
-                                    <textarea name="comentario_profesor"
+                                    <textarea name="observaciones"
                                         class="form-control"
                                         rows="3">{{ $entrega->comentario_profesor }}</textarea>
                                 </div>

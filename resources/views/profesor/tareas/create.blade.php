@@ -221,23 +221,8 @@
                         </div>
                         <div class="card-body">
                             
-                            {{-- Puntaje --}}
-                            <div class="form-group">
-                                <label for="puntaje">Puntaje Máximo <span class="text-danger">*</span></label>
-                                <input type="number" 
-                                       name="puntaje" 
-                                       id="puntaje" 
-                                       class="form-control @error('puntaje') is-invalid @enderror" 
-                                       value="{{ old('puntaje', 5) }}"
-                                       min="0"
-                                       max="5"
-                                       step="0.1"
-                                       required>
-                                @error('puntaje')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                                <small class="text-muted">Escala 0.0 - 5.0</small>
-                            </div>
+                            {{-- Puntaje: fijo en escala 0.0 - 5.0, no se pide por tarea --}}
+                            <input type="hidden" name="puntaje" value="5.0">
 
                             {{-- Permitir Entregas Tardías --}}
                             <div class="form-group">

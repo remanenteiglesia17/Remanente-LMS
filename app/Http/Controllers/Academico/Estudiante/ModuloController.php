@@ -26,6 +26,8 @@ class ModuloController extends Controller
                 return $modulo;
             });
 
-        return view('estudiante.modulos.index', compact('curso', 'modulos'));
+        $profesor = $curso->profesores()->with('user')->first();
+
+        return view('estudiante.modulos.index', compact('curso', 'modulos', 'profesor'));
     }
 }

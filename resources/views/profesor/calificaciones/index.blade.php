@@ -31,6 +31,17 @@
         </div>
 
         @if ($cursoSeleccionado)
+            <div class="text-right mb-3">
+                <form action="{{ route('admin.profesor.calificaciones.finalizar-curso') }}" method="POST"
+                    onsubmit="return confirm('Esto evaluará a todos los estudiantes activos según su promedio y horas cumplidas, y cerrará el curso. ¿Continuar?');">
+                    @csrf
+                    <input type="hidden" name="curso_id" value="{{ $cursoSeleccionado->id }}">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-flag-checkered"></i> Finalizar curso
+                    </button>
+                </form>
+            </div>
+        @endif
             <div class="card shadow">
                 <div class="card-header bg-dark">
                     <h3 class="card-title">Planilla: {{ $cursoSeleccionado->nombre }}</h3>

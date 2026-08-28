@@ -87,7 +87,7 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'admin.acciones.seleccionCursos', 'description' => 'Puede asignar múltiples cursos al mismo horario'])->syncRoles([$root]);
         
         // ASSISTANCE - RU
-        Permission::create(['name' => 'admin.asistencias.index', 'description' => 'Ver asistencias'])->syncRoles([$root, $superAdmin, $admin, $secretaria, $profesor]);
+        Permission::create(['name' => 'admin.asistencias.index', 'description' => 'Ver asistencias'])->syncRoles([$secretaria, $profesor]);
         Permission::create(['name' => 'admin.asistencias.inasistencias', 'description' => 'Ver inasistencias'])->syncRoles([$root, $superAdmin, $admin, $secretaria]);
         
         // PERMISSIONS - CRUD

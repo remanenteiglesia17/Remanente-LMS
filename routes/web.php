@@ -33,21 +33,13 @@ Route::get('/estudiante/modulos', [EstudianteModuloController::class, 'index'])-
 Route::resource('/estudiante/entregas/', EntregaController::class)->names('estudiante.entregas')->middleware(['auth', 'role:estudiante']);
 Route::resource('asistencias', AsistenciaController::class)->only(['index', 'store']);
 
-// ============================================
-// MÓDULO DE ASISTENCIAS
-// ============================================
-Route::prefix('asistencias')->name('asistencias.')->group(function () {
-    // Excusar/Justificar inasistencia
-    Route::post('{asistencia}/excusar', [AsistenciaController::class, 'excusar'])
-        ->name('asistencias.excusar');
-
-    // Registro rápido (AJAX)
-    Route::post('asistencias.rapido', [AsistenciaController::class, 'registrarRapido'])
-        ->name('asistencias.rapido');
-
-    // Estadísticas de un estudiante
-    Route::get('estadisticas/{estudiante}', [AsistenciaController::class, 'estadisticas'])
-        ->name('asistencias.excusar');
+// ── Asistencias ───────────────────────────────────────────
+Route::middleware('auth')->prefix('asistencias')->name('asistencias.')->group(function () {
+    Route::get('/', [AsistenciaController::class, 'index'])->name('index');
+    Route::post('/', [AsistenciaController::class, 'store'])->name('store');
+    Route::post('{asistencia}/excusar', [AsistenciaController::class, 'excusar'])->name('excusar');
+    Route::post('rapido', [AsistenciaController::class, 'registrarRapido'])->name('rapido');
+    Route::get('estadisticas/{estudiante}', [AsistenciaController::class, 'estadisticas'])->name('estadisticas');
 });
 
 
@@ -77,42 +69,7 @@ Route::prefix('estudiante/calificaciones')->middleware(['auth', 'role:estudiante
 
     Route::get('/estadisticas/curso/{curso}', [CalificacionController::class, 'estadisticas'])->name('estadisticas');    // Estadísticas de calificaciones por curso
 }); 
-// // ========== RUTAS ADMIN - GESTIÓN DE CALIFICACIONES ==========
-// Route::prefix('admin/calificaciones')
-//     ->middleware(['auth', 'role:superAdmin|admin|secretaria'])
-//     ->name('admin.calificaciones.')
-//     ->group(function () {
-//         // Dashboard general de calificaciones
-//         Route::get('/', [CalificacionController::class, 'adminIndex'])->name('index');
 
-//         // Ver todas las calificaciones de un curso
-//         Route::get('/curso/{curso}', [CalificacionController::class, 'adminPorCurso'])->name('curso');
-
-//         // Ver todas las calificaciones de un estudiante
-//         Route::get('/estudiante/{estudiante}', [CalificacionController::class, 'adminPorEstudiante'])->name('estudiante');
-
-//         // Reportes académicos
-//         Route::get('/reportes', [CalificacionController::class, 'reportes'])->name('reportes');
-//         Route::get('/reportes/curso/{curso}', [CalificacionController::class, 'reporteCurso'])->name('reportes.curso');
-//         Route::get('/reportes/periodo/{periodo}', [CalificacionController::class, 'reportePeriodo'])->name('reportes.periodo');
-
-//         // Estadísticas generales
-//         Route::get('/estadisticas', [CalificacionController::class, 'estadisticasGenerales'])->name('estadisticas');
-
-//         // Exportar datos
-//         Route::get('/exportar', [CalificacionController::class, 'exportarGeneral'])->name('exportar');
-//         Route::get('/exportar/curso/{curso}', [CalificacionController::class, 'exportarCurso'])->name('exportar.curso');
-
-//         // Modificar calificación (solo admin/superAdmin)
-//         Route::put('/{calificacion}/editar', [CalificacionController::class, 'adminUpdate'])
-//             ->name('update')
-//             ->middleware('role:superAdmin|admin');
-
-//         // Eliminar calificación (solo superAdmin)
-//         Route::delete('/{calificacion}', [CalificacionController::class, 'destroy'])
-//             ->name('destroy')
-//             ->middleware('role:superAdmin');
-//     });
 // ========== NOTIFICACIONES ==========
 use App\Http\Controllers\NotificacionController;
 

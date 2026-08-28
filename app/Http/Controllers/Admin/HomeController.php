@@ -171,9 +171,6 @@ class HomeController extends Controller
             'message' => 'required',
         ]);
 
-        // para depuración
-        // dd($valid);
-
         Notification::route('mail', 'destino@tudominio.com')->notify(
             new PostNotification($request->title, $request->email, $request->phone, $request->message)
         );

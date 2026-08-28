@@ -35,10 +35,8 @@
                             <th>Módulo</th>
                             <th>Título</th>
                             <th>Fecha Entrega</th>
-                            <th>Puntaje Máx.</th>
-                            <th>Peso (%)</th>
                             <th>Entregas</th>
-                            <th>Ver</th>
+                            <th>Calificar</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -56,15 +54,13 @@
                                 <td>{{ $tarea->titulo_tarea }}</td>
                                 <td>{{ $tarea->fecha_entrega ? \Carbon\Carbon::parse($tarea->fecha_entrega)->format('d/m/Y H:i') : 'Sin fecha' }}
                                 </td>
-                                <td><span class="badge badge-light">{{ number_format($tarea->puntaje, 1) }}</span></td>
-                                <td><span class="badge badge-primary">{{ number_format($tarea->peso, 0) }}%</span></td>
                                 <td>
                                     <span class="badge badge-info">{{ $tarea->entregas->count() }} entregas</span>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.profesor.tareas.show', $tarea->id) }}" class="btn btn-sm btn-info"
-                                        title="Ver">
-                                        <i class="fas fa-eye"></i>
+                                    <a href="{{ route('admin.profesor.calificaciones.index', ['curso_id' => $tarea->curso_id]) }}"
+                                        class="btn btn-sm btn-info" title="Calificar entregas de esta tarea">
+                                        <i class="fas fa-check-square"></i>
                                     </a>
                                 </td>
                                 <td>

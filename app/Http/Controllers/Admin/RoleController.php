@@ -24,7 +24,6 @@ class RoleController extends Controller
     {
         $permissions = ModelsPermission::orderBy('name', 'ASC')->get();
         $roles = Role::orderBy('created_at', 'ASC')->paginate(10);
-        // dd($roles);
         return view('admin.roles.index', compact('roles', 'permissions'));
     }
 
@@ -64,7 +63,6 @@ class RoleController extends Controller
     public function update(Request $request, $id)
     {
         $role = Role::findOrFail($id);
-                // dd($request->all());
 
         $validator = Validator::make(
             $request->all(),

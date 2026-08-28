@@ -77,6 +77,7 @@ class CalificacionController extends Controller
                 [
                     'estudiante_id'    => $entrega->estudiante_id,
                     'curso_id'         => $tarea->curso_id,
+                    'tarea_id'         => $tarea->id,
                     'profesor_id'      => Auth::user()->profesor->id,
                     'concepto'         => $tarea->titulo_tarea,
                     'nota'             => $request->nota,
@@ -148,6 +149,7 @@ class CalificacionController extends Controller
                         ],
                         [
                             'profesor_id'        => $profesor->id,
+                            'tarea_id'           => $tarea->id,
                             'nota'               => $valor,
                             'nota_maxima'        => $tarea->puntaje,
                             'tipo_evaluacion'    => $tarea->tipo,
@@ -283,28 +285,52 @@ class CalificacionController extends Controller
     /**
      * Marcar todos los estudiantes de un curso como Aprobados (habilita certificado).
      */
-    public function aprobarCurso(Request $request)
+    /**
+     * Finalizar curso: evalúa a cada estudiante activo según su promedio
+     * ponderado real y sus horas cumplidas, y marca su inscripción como
+     * 'aprobado' o 'reprobado' en consecuencia (no aprueba en bloque).
+     */
+    public function finalizarCurso(Request $request)
     {
         $request->validate(['curso_id' => 'required|exists:cursos,id']);
 
         $profesor = Auth::user()->profesor;
 
-        // Solo el profesor del curso puede hacer esto
         abort_unless(
             $profesor->cursos->contains($request->curso_id),
             403,
             'No tienes acceso a este curso.'
         );
 
-        DB::table('estudiante_curso')
-            ->where('curso_id', $request->curso_id)
+        $curso = Curso::findOrFail($request->curso_id);
+
+        $inscripciones = DB::table('estudiante_curso')
+            ->where('curso_id', $curso->id)
             ->where('estado', 'activo')
-            ->update(['estado' => 'aprobado', 'updated_at' => now()]);
+            ->get();
+
+        $aprobados = 0;
+        $reprobados = 0;
+
+        foreach ($inscripciones as $inscripcion) {
+            $promedio = Calificacion::promedioPonderadoEstudianteCurso($inscripcion->estudiante_id, $curso->id);
+            $horasOk = $inscripcion->horas_realizadas >= $curso->horas_requeridas;
+            $aprobo = $promedio >= 3.0 && $horasOk;
+
+            DB::table('estudiante_curso')
+                ->where('id', $inscripcion->id)
+                ->update([
+                    'estado' => $aprobo ? 'aprobado' : 'reprobado',
+                    'updated_at' => now(),
+                ]);
+
+            $aprobo ? $aprobados++ : $reprobados++;
+        }
 
         return back()->with([
             'swal' => 2,
-            'title' => '¡Listo!',
-            'info'  => 'Todos los estudiantes activos han sido marcados como Aprobados. Ya pueden descargar su certificado.',
+            'title' => 'Curso finalizado',
+            'info'  => "Se evaluaron {$inscripciones->count()} estudiantes: {$aprobados} aprobados, {$reprobados} reprobados (según su promedio y horas cumplidas).",
             'icon'  => 'success',
         ]);
     }

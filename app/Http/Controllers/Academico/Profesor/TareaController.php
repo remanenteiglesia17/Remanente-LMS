@@ -52,7 +52,6 @@ class TareaController extends Controller
                     'icon' => 'info',
                 ]);
         }
-        // dd($tareas);
         return view('profesor.tareas.index', compact('cursos', 'tareas'));
     }
 
@@ -89,7 +88,6 @@ class TareaController extends Controller
             'fecha_apertura' => 'nullable|date',
             'fecha_entrega' => 'required|date',
             'puntaje' => 'required|numeric|min:0|max:5',  // Escala de calificación (0.0 a 5.0)
-            'peso' => 'required|numeric|min:0|max:100',   // Porcentaje asignado (0% a 100%)
             'penalizacion_tardia' => 'nullable|numeric|min:0',
             'formato_entrega' => 'required|in:archivo,enlace,texto,ambos',
             'documentos' => 'nullable|array',

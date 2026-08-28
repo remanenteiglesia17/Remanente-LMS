@@ -16,6 +16,7 @@ class Calificacion extends Model
         'curso_id',
         'profesor_id',
         'entrega_id',
+        'tarea_id',
         'concepto',
         'nota',
         'nota_maxima',
@@ -59,6 +60,11 @@ public function estudiante()
     public function entrega()
     {
         return $this->belongsTo(Entrega::class, 'entrega_id');
+    }
+
+    public function tarea()
+    {
+        return $this->belongsTo(Tarea::class, 'tarea_id');
     }
 
     // ========================================
@@ -109,13 +115,51 @@ public function estudiante()
     }
 
     /**
-     * Aporte de esta calificación a la nota final: en el sistema por puntos,
-     * es simplemente la nota obtenida (los puntos que suma junto a las
-     * demás evaluaciones sobre el total de puntajes máximos del curso).
+     * Aporte de esta calificación a la nota final (0.0 - 5.0), según el
+     * sistema de tres niveles (ver promedioPonderadoEstudianteCurso para
+     * el detalle completo).
      */
     public function getAporteNotaFinalAttribute()
     {
-        return round((float) $this->nota, 2);
+        $tarea = $this->tarea ?? Tarea::find($this->tarea_id);
+        if (!$tarea || !$tarea->modulo_id) {
+            return 0;
+        }
+
+        $modulo = $tarea->modulo ?? Modulo::find($tarea->modulo_id);
+        if (!$modulo) {
+            return 0;
+        }
+
+        $curso = Curso::find($this->curso_id);
+        $totalModulos = $curso ? Modulo::where('curso_id', $curso->id)->count() : 1;
+        if ($totalModulos <= 0) {
+            return 0;
+        }
+
+        $pesosCategoria = $modulo->pesosPorCategoria();
+        $sumaPesosActivos = self::sumaPesosCategoriasActivasModulo($modulo->id, $pesosCategoria);
+        if ($sumaPesosActivos <= 0) {
+            return 0;
+        }
+
+        $pesoCategoria = $pesosCategoria[$this->tipo_evaluacion] ?? 0;
+        $cantidadMismoTipo = Tarea::where('modulo_id', $modulo->id)
+            ->where('tipo', $this->tipo_evaluacion)
+            ->count();
+        if ($cantidadMismoTipo <= 0) {
+            return 0;
+        }
+
+        $notaMaxima = $this->nota_maxima ?: 5;
+
+        $aporte = ($this->nota / $notaMaxima)
+            * (1 / $cantidadMismoTipo)
+            * ($pesoCategoria / $sumaPesosActivos)
+            * (1 / $totalModulos)
+            * 5;
+
+        return round((float) $aporte, 2);
     }
 
     /**
@@ -166,38 +210,109 @@ public function estudiante()
     /**
      * Calcular promedio ponderado de un estudiante en un curso.
      *
-     * El "peso" de cada evaluación es su propio puntaje máximo
-     * (nota_maxima, igual al puntaje de la tarea/quiz/examen que la generó),
-     * no un porcentaje artificial. Es un promedio por puntos:
-     * suma de notas obtenidas / suma de notas máximas posibles, escalado a
-     * la escala de calificación del curso (0.0 - 5.0).
+     * Sistema de tres niveles:
+     * 1) Dentro de cada categoría (tarea/quiz/examen/proyecto/foro) DE UN
+     *    MÓDULO, todas las actividades del mismo tipo se reparten el peso
+     *    de esa categoría en partes iguales (sin pedir un % manual al
+     *    crear cada actividad).
+     * 2) Cada categoría aporta a la nota del módulo según el % que ese
+     *    módulo definió (Modulo::pesosPorCategoria(), debe sumar 100%
+     *    entre sus 5 categorías). Igual que antes, si el profesor nunca
+     *    creó actividades de alguna categoría dentro del módulo, esa
+     *    categoría se excluye y su peso se redistribuye proporcionalmente
+     *    entre las categorías que sí tienen actividades en ese módulo.
+     * 3) La nota final del curso es el promedio simple de la nota de cada
+     *    módulo (se suman los resultados de cada módulo y se divide entre
+     *    la cantidad de módulos del curso).
      */
     public static function promedioPonderadoEstudianteCurso($estudianteId, $cursoId)
     {
+        $modulos = Modulo::where('curso_id', $cursoId)->get();
+
+        if ($modulos->isEmpty()) {
+            return 0;
+        }
+
         $calificaciones = self::where('estudiante_id', $estudianteId)
             ->where('curso_id', $cursoId)
             ->where('publicada', true)
-            ->get();
+            ->with('tarea')
+            ->get()
+            ->filter(fn ($c) => $c->tarea && $c->tarea->modulo_id);
 
-        if ($calificaciones->isEmpty()) {
+        $sumaNotasModulos = 0;
+
+        foreach ($modulos as $modulo) {
+            $calificacionesModulo = $calificaciones->filter(
+                fn ($c) => $c->tarea->modulo_id === $modulo->id
+            );
+
+            $sumaNotasModulos += self::notaModulo($modulo, $calificacionesModulo);
+        }
+
+        return round($sumaNotasModulos / $modulos->count(), 2);
+    }
+
+    /**
+     * Nota (0.0 - 5.0) de un módulo específico, dado el set de
+     * calificaciones del estudiante que pertenecen a ese módulo.
+     */
+    public static function notaModulo(Modulo $modulo, $calificacionesModulo): float
+    {
+        if ($calificacionesModulo->isEmpty()) {
             return 0;
         }
 
-        $sumaNotas = 0;
-        $sumaMaximos = 0;
+        $pesosCategoria = $modulo->pesosPorCategoria();
+        $sumaPesosActivos = self::sumaPesosCategoriasActivasModulo($modulo->id, $pesosCategoria);
 
-        foreach ($calificaciones as $calif) {
-            $sumaNotas   += $calif->nota;
-            $sumaMaximos += $calif->nota_maxima ?: 5;
-        }
-
-        if ($sumaMaximos == 0) {
+        if ($sumaPesosActivos <= 0) {
             return 0;
         }
 
-        $promedio = ($sumaNotas / $sumaMaximos) * 5;
+        $porCategoria = $calificacionesModulo->groupBy('tipo_evaluacion');
 
-        return round($promedio, 2);
+        $notaModulo = 0;
+
+        foreach ($porCategoria as $tipo => $grupo) {
+            $pesoCategoria = $pesosCategoria[$tipo] ?? 0;
+            if ($pesoCategoria <= 0) {
+                continue; // categoría sin ponderación configurada en el módulo
+            }
+
+            // Promedio simple de (nota/nota_maxima) entre las actividades de
+            // este tipo: equivale a repartir el peso de la categoría en
+            // partes iguales entre ellas, sin pedir un % manual por tarea.
+            $promedioCategoria = $grupo->avg(function ($calif) {
+                $notaMaxima = $calif->nota_maxima ?: 5;
+                return $calif->nota / $notaMaxima;
+            });
+
+            $notaModulo += $promedioCategoria * $pesoCategoria;
+        }
+
+        return ($notaModulo / $sumaPesosActivos) * 5;
+    }
+
+    /**
+     * Suma de los pesos de categoría (peso_tarea, peso_quiz, ...) que
+     * corresponden a categorías con al menos una actividad creada en el
+     * módulo. Es el "100%" real sobre el que se escala la nota del
+     * módulo, después de redistribuir el peso de las categorías no
+     * utilizadas.
+     */
+    private static function sumaPesosCategoriasActivasModulo($moduloId, array $pesosCategoria): float
+    {
+        $tiposConActividad = Tarea::where('modulo_id', $moduloId)
+            ->distinct()
+            ->pluck('tipo');
+
+        $suma = 0;
+        foreach ($tiposConActividad as $tipo) {
+            $suma += $pesosCategoria[$tipo] ?? 0;
+        }
+
+        return (float) $suma;
     }
 
     public static function estadisticasCurso($cursoId)

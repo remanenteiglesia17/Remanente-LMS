@@ -15,7 +15,7 @@ class InscripcionController extends Controller
     /**
      * Mostrar todas las inscripciones.
      */
-    public function index()
+    public function index(Request $request)
     {
         $inscripciones = DB::table('estudiante_curso')
             ->join('estudiantes', 'estudiante_curso.estudiante_id', '=', 'estudiantes.id')
@@ -34,10 +34,23 @@ class InscripcionController extends Controller
                 'estudiante_curso.fecha_inscripcion',
                 'estudiante_curso.horas_realizadas'
             )
+            ->when($request->filled('buscar'), function ($q) use ($request) {
+                $buscar = $request->buscar;
+                $q->where(function ($sub) use ($buscar) {
+                    $sub->where('estudiantes.nombres', 'like', "%{$buscar}%")
+                        ->orWhere('estudiantes.apellidos', 'like', "%{$buscar}%")
+                        ->orWhere('estudiantes.cc', 'like', "%{$buscar}%");
+                });
+            })
+            ->when($request->filled('curso_id'), fn ($q) => $q->where('cursos.id', $request->curso_id))
+            ->when($request->filled('estado'), fn ($q) => $q->where('estudiante_curso.estado', $request->estado))
             ->orderBy('estudiante_curso.created_at', 'desc')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('admin.inscripciones.index', compact('inscripciones'));
+        $cursos = Curso::orderBy('nombre')->get();
+
+        return view('admin.inscripciones.index', compact('inscripciones', 'cursos'));
     }
 
     /**

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dfd7292c77d42996b7e99612b385fdbe",
+    "content-hash": "a01197f8d10ee75ca234c80155ecc779",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -2082,16 +2082,16 @@
         },
         {
             "name": "jeroennoten/laravel-adminlte",
-            "version": "v3.15.3",
+            "version": "v3.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jeroennoten/Laravel-AdminLTE.git",
-                "reference": "606d34ad54d9f16206323f88b6767fb68e8f6064"
+                "reference": "dc92e92a9c8ac7443a82c97310e347ad62d971e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jeroennoten/Laravel-AdminLTE/zipball/606d34ad54d9f16206323f88b6767fb68e8f6064",
-                "reference": "606d34ad54d9f16206323f88b6767fb68e8f6064",
+                "url": "https://api.github.com/repos/jeroennoten/Laravel-AdminLTE/zipball/dc92e92a9c8ac7443a82c97310e347ad62d971e4",
+                "reference": "dc92e92a9c8ac7443a82c97310e347ad62d971e4",
                 "shasum": ""
             },
             "require": {
@@ -2135,9 +2135,9 @@
             ],
             "support": {
                 "issues": "https://github.com/jeroennoten/Laravel-AdminLTE/issues",
-                "source": "https://github.com/jeroennoten/Laravel-AdminLTE/tree/v3.15.3"
+                "source": "https://github.com/jeroennoten/Laravel-AdminLTE/tree/v3.16.0"
             },
-            "time": "2025-12-02T14:31:45+00:00"
+            "time": "2026-04-30T07:28:25+00:00"
         },
         {
             "name": "laravel-lang/actions",
@@ -11745,6 +11745,54 @@
                 }
             ],
             "time": "2025-11-17T20:03:58+00:00"
+        },
+        {
+            "name": "tomasvotruba/class-leak",
+            "version": "2.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TomasVotruba/class-leak.git",
+                "reference": "c13a50f0d4593d17fb19a2278a59556662e663af"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TomasVotruba/class-leak/zipball/c13a50f0d4593d17fb19a2278a59556662e663af",
+                "reference": "c13a50f0d4593d17fb19a2278a59556662e663af",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2"
+            },
+            "bin": [
+                "bin/class-leak",
+                "bin/class-leak.php"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "TomasVotruba\\ClassLeak\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Detect leaking classes",
+            "support": {
+                "issues": "https://github.com/TomasVotruba/class-leak/issues",
+                "source": "https://github.com/TomasVotruba/class-leak/tree/2.1.4"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.me/rectorphp",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/tomasvotruba",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-05-27T08:33:55+00:00"
         }
     ],
     "aliases": [],

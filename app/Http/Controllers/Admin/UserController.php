@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organismo;
+use App\Models\Profesor;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -76,7 +77,50 @@ class UserController extends Controller
             $usuario->roles()->sync($rolesSolicitados);
         }
 
-        return redirect()->route('admin.users.index')->with(['toast'=>2,'title' => 'Exito','info' => 'Se registro al usuario de forma correcta','icon'=>'success']);
+        $aviso = $this->sincronizarRegistroDeRol($usuario, $rolesSolicitados);
+
+        return redirect()->route('admin.users.index')->with(array_merge(
+            ['toast'=>2,'title' => 'Exito','info' => 'Se registro al usuario de forma correcta','icon'=>'success'],
+            $aviso
+        ));
+    }
+
+    /**
+     * Cuando desde este formulario genérico se asigna el rol 'profesor' a un
+     * usuario, garantizamos que exista su registro en la tabla 'profesors'
+     * (varias pantallas del panel de profesor asumen que Auth::user()->profesor
+     * no es null). El teléfono no se pide aquí, así que queda vacío y se avisa
+     * al admin para que lo complete desde "Gestión de Profesores".
+     *
+     * Los roles 'estudiante' y 'secretaria' NO se auto-crean aquí porque sus
+     * tablas exigen datos que este formulario no captura (cédula única,
+     * dirección, fecha de nacimiento, etc.). Para esos roles se debe usar el
+     * módulo dedicado (Estudiantes / Secretarias), y aquí solo se advierte.
+     */
+    private function sincronizarRegistroDeRol(User $usuario, $rolesSolicitadosIds): array
+    {
+        if ($rolesSolicitadosIds->isEmpty()) {
+            return [];
+        }
+
+        $nombresRoles = Role::whereIn('id', $rolesSolicitadosIds)->pluck('name');
+
+        if ($nombresRoles->contains('profesor') && !$usuario->fresh()->profesor) {
+            Profesor::create([
+                'nombres'   => $usuario->name,
+                'apellidos' => $usuario->apellido,
+                'telefono'  => '',
+                'user_id'   => $usuario->id,
+            ]);
+
+            return ['warning' => 'Se creó el registro de profesor, pero falta el teléfono: complétalo en "Gestión de Profesores".'];
+        }
+
+        if (($nombresRoles->contains('estudiante') || $nombresRoles->contains('secretaria')) && !$usuario->fresh()->estudiante && !$usuario->fresh()->secretaria) {
+            return ['warning' => 'Este rol requiere datos adicionales (cédula, dirección, etc.) que este formulario no pide. Completa el registro desde el módulo de Estudiantes o Secretarias.'];
+        }
+
+        return [];
     }
     // public function show($id) {}
     public function edit($id)
@@ -127,7 +171,12 @@ class UserController extends Controller
         $user->save();
         $user->roles()->sync($rolesSolicitados);
 
-        return redirect()->route('admin.users.index', $user)->with(['toast'=>2,'title' => 'Exito','info' => 'Se actualizo el usuario correctamente','icon' => 'success']);
+        $aviso = $this->sincronizarRegistroDeRol($user, $rolesSolicitados);
+
+        return redirect()->route('admin.users.index', $user)->with(array_merge(
+            ['toast'=>2,'title' => 'Exito','info' => 'Se actualizo el usuario correctamente','icon' => 'success'],
+            $aviso
+        ));
     }
 
     public function toggleStatus($id) //DEACTIVATE

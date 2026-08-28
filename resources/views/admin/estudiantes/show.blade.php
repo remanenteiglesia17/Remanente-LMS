@@ -26,13 +26,13 @@
                 <div class="col-md-6">
                     <ul class="list-group list-group-unbordered mb-3">
                         <li class="list-group-item">
-                            <b>Identificación (CC):</b> <span class="float-right">{{ $estudiante->cedula ?? $estudiante->identificacion }}</span>
+                            <b>Identificación (CC):</b> <span class="float-right">{{ $estudiante->cc ?? $estudiante->identificacion }}</span>
                         </li>
                         <li class="list-group-item">
                             <b>Teléfono:</b> <span class="float-right">{{ $estudiante->telefono }}</span>
                         </li>
                         <li class="list-group-item">
-                            <b>Sexo:</b> <span class="float-right">{{ $estudiante->sexo }}</span>
+                            <b>Sexo:</b> <span class="float-right">{{ $estudiante->genero }}</span>
                         </li>
                     </ul>
                 </div>

@@ -49,6 +49,7 @@ class CursoController extends Controller
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
         ]);
+
         if ($validator->fails()) {
             return back()
                 ->withErrors($validator)
@@ -103,7 +104,7 @@ class CursoController extends Controller
 
     public function update(Request $request, Curso $curso)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nombre' => 'required|string',
             'descripcion' => 'required|string',
             'periodo' => 'required|string',
@@ -111,7 +112,11 @@ class CursoController extends Controller
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
         ]);
-        // dd($request->all());
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
         DB::transaction(function () use ($request, $curso) {
             // 1️⃣ Actualizar curso
             $curso->update([

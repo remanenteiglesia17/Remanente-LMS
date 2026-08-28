@@ -31,7 +31,7 @@ Route::patch('/curso/{id}/toggle-status', [CursoController::class, 'toggleStatus
 // RUTAS ADMIN
 
 // RUTAS HOME
-Route::get('/admin', [HomeController::class, 'index'])->name('index')->middleware('auth');
+Route::get('/', [HomeController::class, 'index'])->name('index')->middleware('auth');
 
 // RUTAS CONFIGURACIONES
 Route::resource('/config', ConfigController::class)->names('config');
@@ -70,18 +70,18 @@ Route::get('/profesor/asistencia', [AsistenciaController::class, 'index'])->name
 Route::post('/asistencia/registrar', [AsistenciaController::class, 'store'])->name('asistencias.store');
 
 // RUTAS SECRETARIAS
-Route::get('/admin/secretaria/inasistencias', [AsistenciaController::class, 'show'])->name('secretarias.inasistencias');
-Route::post('/admin/asistencia/habilitar/{id}', [AsistenciaController::class, 'habilitarEstudiante'])->name('asistencia.habilitar');
+Route::get('/secretaria/inasistencias', [AsistenciaController::class, 'show'])->name('secretarias.inasistencias');
+Route::post('/asistencia/habilitar/{id}', [AsistenciaController::class, 'habilitarEstudiante'])->name('asistencia.habilitar');
 
 // RUTAS HORARIOS ADMIN
-Route::resource('/admin/horarios', HorarioController::class)->names('horarios');
-Route::get('/admin/horarios/curso/{id}', [HorarioController::class, 'show_datos_cursos'])->name('horarios.show_datos_cursos');
+Route::resource('/horarios', HorarioController::class)->names('horarios');
+Route::get('/horarios/curso/{id}', [HorarioController::class, 'show_datos_cursos'])->name('horarios.show_datos_cursos');
 // Agregar ANTES de la ruta existente
-Route::get('/admin/horarios/curso/{id}/datos', [HorarioController::class, 'show_datos_por_curso'])
+Route::get('/horarios/curso/{id}/datos', [HorarioController::class, 'show_datos_por_curso'])
     ->name('horarios.show_datos_por_curso');
     
 // RUTAS HORARIOS STUDENT ver sus reservas
-Route::get('/admin/horarios/show_reserva_profesores',
+Route::get('/horarios/show_reserva_profesores',
     [HomeController::class, 'show_reserva_profesores'])
                                                 ->name('horarios.show_reserva_profesores');
 
@@ -92,7 +92,7 @@ Route::put('/clases/{clase}', [ClaseController::class, 'update'])->name('clases.
 Route::delete('/clases/{clase}', [ClaseController::class, 'destroy'])->name('clases.destroy');
 Route::get('horarios/getCurso/{id}', [HorarioController::class, 'getCursosPorProfesor'])
     ->name('horarios.getCurso');
-Route::get('admin/inscripciones/get-profesores/{cursoId}', [InscripcionController::class, 'getProfesoresPorCurso'])
+Route::get('inscripciones/get-profesores/{cursoId}', [InscripcionController::class, 'getProfesoresPorCurso'])
     ->name('inscripciones.get_profesores');
 // RUTAS HORARIOS TEACHER ver quien tiene una reserva con el
 Route::get('/show_reservas/{id}', [HomeController::class, 'show_reservas'])->name('show_reservas');
@@ -110,10 +110,10 @@ Route::prefix('inscripciones')->name('inscripciones.')->group(function () {
     Route::delete('{id}', [InscripcionController::class, 'destroy'])->name('destroy'); // Eliminar inscripción
 });
 // RUTAS para desplegar select
-Route::get('/admin/profesores/evento/{cursoId}', [ProfesorController::class, 'obtenerProfesores'])->name('obtenerProfesores');
-Route::get('/admin/cursos/evento/{estudianteId}', [CursoController::class, 'obtenerCursos'])->name('obtenerCursos');
-Route::get('/admin/estudiantes/{estudiante}/inscripciones',[InscripcionController::class, 'cursosPorEstudiante']
-)->name('admin.estudiantes.inscripciones');
+Route::get('/profesores/evento/{cursoId}', [ProfesorController::class, 'obtenerProfesores'])->name('obtenerProfesores');
+Route::get('/cursos/evento/{estudianteId}', [CursoController::class, 'obtenerCursos'])->name('obtenerCursos');
+Route::get('/estudiantes/{estudiante}/inscripciones',[InscripcionController::class, 'cursosPorEstudiante']
+)->name('estudiantes.inscripciones');
 
 // // Route::resource('/profesor/tareas', TareaController::class)->except(['destroy'])->names('admin.profesor.tareas');
 // // ✅ OPCIÓN 2: Definir rutas manualmente
@@ -130,6 +130,7 @@ Route::prefix('profesor/tareas')->middleware(['auth', 'role:profesor'])->name('p
 Route::prefix('profesor/modulos')->middleware(['auth', 'role:profesor'])->name('profesor.modulos.')->group(function () {
     Route::get('/', [ProfesorModuloController::class, 'index'])->name('index');
     Route::post('/', [ProfesorModuloController::class, 'store'])->name('store');
+    Route::put('/{modulo}', [ProfesorModuloController::class, 'update'])->name('update');
     Route::patch('/{modulo}/toggle-finalizado', [ProfesorModuloController::class, 'toggleFinalizado'])->name('toggle-finalizado');
     Route::delete('/{modulo}', [ProfesorModuloController::class, 'destroy'])->name('destroy');
 });
@@ -138,9 +139,9 @@ Route::get('profesor/calificaciones/visual', function () {
     return view('profesor.calificaciones.visual');})->name('profesor.calificaciones.visual');
 
 // Rutas para PROFESORES - Calificaciones
-Route::post('/profesor/calificaciones/aprobar-curso', [\App\Http\Controllers\Academico\Profesor\CalificacionController::class, 'aprobarCurso'])
+Route::post('/profesor/calificaciones/finalizar-curso', [\App\Http\Controllers\Academico\Profesor\CalificacionController::class, 'finalizarCurso'])
     ->middleware(['auth', 'role:profesor'])
-    ->name('profesor.calificaciones.aprobar-curso');
+    ->name('profesor.calificaciones.finalizar-curso');
 
 Route::prefix('profesor/calificaciones')->middleware(['auth', 'role:profesor'])->name('profesor.calificaciones.')->group(function () {
     Route::get('/', [CalificacionController::class, 'index'])->name('index');                                                           // Ver todas las calificaciones de sus cursos
@@ -155,7 +156,7 @@ Route::prefix('profesor/calificaciones')->middleware(['auth', 'role:profesor'])-
     // Route::post('/masiva', [CalificacionController::class, 'storeMasiva'])->name('store-masiva');                                       // Calificar múltiples estudiantes a la vez
     // Route::patch('/{calificacion}/publicar', [CalificacionController::class, 'publicar'])->name('publicar');                            // Publicar/Ocultar calificaciones para estudiantes
     // Route::get('/exportar/curso/{curso}', [CalificacionController::class, 'exportar'])->name('exportar');                               // Exportar calificaciones
-    // Route::get('/estadisticas/curso/{curso}', [CalificacionController::class, 'estadisticas'])->name('estadisticas');                   // Estadísticas de calificaciones por curso
+    Route::get('/estadisticas/curso/{curso}', [CalificacionController::class, 'estadisticas'])->name('estadisticas');                   // Estadísticas de calificaciones por curso
 });
 
 Route::middleware('auth')->group(function () {

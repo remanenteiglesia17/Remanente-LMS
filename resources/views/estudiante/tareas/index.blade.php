@@ -43,10 +43,6 @@
                                                 <div>
                                                     <h5>{{ $tarea->titulo_tarea  }}</h5>
                                                     <p class="text-muted">{{ $tarea->descripcion_tarea }}</p>
-                                                    <span class="badge badge-secondary">
-                                                        <i class="fas fa-percentage"></i> Peso:
-                                                        {{ number_format($tarea->peso, 0) }}%
-                                                    </span>
                                                     <span class="badge badge-light">
                                                         <i class="fas fa-star"></i> Nota Máx:
                                                         {{ number_format($tarea->puntaje, 1) }}

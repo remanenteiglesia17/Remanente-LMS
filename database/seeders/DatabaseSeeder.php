@@ -25,13 +25,11 @@ class DatabaseSeeder extends Seeder
             ModuloSeeder::class,
             HorarioSeeder::class,          // asigna varios cursos por profesor
             EstudianteSeeder::class,
+            AsistenciaSeeder::class,       // clases + asistencias de prueba
             TareaSeeder::class,            // tareas/quizzes/parciales/proyecto por módulo
             EntregaCalificacionSeeder::class, // entregas + calificaciones + aprobado/reprobado real
             CalendarioEventoSeeder::class,
         ]); 
         // User::factory(9)->create(); // Crea 9 usuarios
-        // Tag::factory(8)->create();
-        // $this->call(CategorySeeder::class);
-        // $this->call(PostSeeder::class);
     }
 }

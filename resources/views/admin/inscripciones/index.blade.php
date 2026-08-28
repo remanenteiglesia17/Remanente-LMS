@@ -29,15 +29,26 @@
         @endif
 
         {{-- Filtros --}}
-        {{-- <div class="card">
+        <div class="card">
             <div class="card-body">
                 <form action="{{ route('admin.inscripciones.index') }}" method="GET" class="row">
-                    <div class="col-md-4">
-                        <input type="text" name="buscar" class="form-control" 
-                               placeholder="Buscar por estudiante o curso..."
+                    <div class="col-md-3">
+                        <input type="text" name="buscar" class="form-control"
+                               placeholder="Buscar por estudiante o cédula..."
                                value="{{ request('buscar') }}">
                     </div>
                     <div class="col-md-3">
+                        {{-- Reemplaza el antiguo enlace "ver quiénes están inscritos" por curso --}}
+                        <select name="curso_id" class="form-control">
+                            <option value="">-- Todos los cursos --</option>
+                            @foreach($cursos as $curso)
+                                <option value="{{ $curso->id }}" {{ request('curso_id') == $curso->id ? 'selected' : '' }}>
+                                    {{ $curso->nombre }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <select name="estado" class="form-control">
                             <option value="">-- Todos los estados --</option>
                             <option value="activo" {{ request('estado') == 'activo' ? 'selected' : '' }}>Activo</option>
@@ -58,7 +69,7 @@
                     </div>
                 </form>
             </div>
-        </div> --}}
+        </div>
 
         {{-- Tabla de inscripciones --}}
         <div class="card">
@@ -88,9 +99,7 @@
                                 </td>
                                 <td>{{ $inscripcion->cc }}</td>
                                 <td>
-                                    <a href="{{ route('admin.inscripciones.estudiantes', $inscripcion->curso_id) }}">
-                                        {{ $inscripcion->curso_nombre }}
-                                    </a>
+                                    {{ $inscripcion->curso_nombre }}
                                     <br>
                                     <small class="text-muted">{{ $inscripcion->codigo }}</small>
                                 </td>
@@ -122,12 +131,6 @@
                                         <a href="{{ route('admin.estudiantes.show', $inscripcion->estudiante_id) }}"
                                            class="btn btn-sm btn-secondary" title="Ver perfil estudiante">
                                             <i class="fas fa-user"></i>
-                                        </a>
-
-                                        {{-- Ver curso --}}
-                                        <a href="{{ route('admin.cursos.show', $inscripcion->curso_id) }}"
-                                           class="btn btn-sm btn-info" title="Ver curso">
-                                            <i class="fas fa-book"></i>
                                         </a>
 
                                         {{-- Editar inscripción --}}

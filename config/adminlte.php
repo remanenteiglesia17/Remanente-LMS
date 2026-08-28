@@ -232,16 +232,11 @@ return [
         ],
         ['header' => 'GESTIÓN ACADÉMICA', 'can' => 'profesor.calificaciones.index'],
         [
-            // 'text' => 'Calificar', 
-            // 'icon' => 'fas fa-edit',
-            // 'can'  => 'profesor.calificaciones.index', // Permiso para el profesor
-            // 'submenu' => [
-            //     [
-            'text' => 'Calificar Tareas',
-            'route'  => 'admin.profesor.calificaciones.index',
+            'text' => 'Calificar', 
             'icon' => 'fas fa-edit',
+            'route'  => 'admin.profesor.calificaciones.index',
             'can'  => 'profesor.calificaciones.index', // Permiso para el profesor
-            //     ],
+            // 'submenu' => [
             //     [
             //         'text' => 'visual Example',
             //         'icon' => 'far fa-circle fa-xs',
@@ -311,21 +306,21 @@ return [
         //             'icon' => 'fas fa-chart-line',
         //             'url' => '#',
         //             // 'route' => 'admin.reportes.cursos',
-        //             'can' => 'admin.reportes.cursos',
+        //             // 'can' => 'admin.reportes.cursos',
         //         ],
         //         [
         //             'text' => 'Estudiantes',
         //             'icon' => 'fas fa-user-chart',
         //             'url' => '#',
         //             // 'route' => 'admin.reportes.estudiantes',
-        //             'can' => 'admin.reportes.estudiantes',
+        //             // 'can' => 'admin.reportes.estudiantes',
         //         ],
         //         [
         //             'text' => 'Asistencias',
         //             'icon' => 'fas fa-calendar-check',
         //             'url' => '#',
         //             // 'route' => 'admin.asistencias.estadisticas',
-        //             'can' => 'admin.asistencias.estadisticas',
+        //             // 'can' => 'admin.asistencias.estadisticas',
         //         ],
         //     ],
         // ],
@@ -446,7 +441,7 @@ return [
         [
             'text' => 'Configuración',
             'icon' => 'fas fa-sliders-h',
-            'route' => 'admin.config.create',
+            'route' => 'admin.config.index',
             'can' => 'admin.config.create',
         ],
         //               [

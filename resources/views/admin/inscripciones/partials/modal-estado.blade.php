@@ -24,11 +24,11 @@
                             </option>
                             <option value="retirado" {{ $inscripcion->estado == 'retirado' ? 'selected' : '' }}>Retirado
                             </option>
-                            <option value="aprobado" {{ $inscripcion->estado == 'aprobado' ? 'selected' : '' }}>Aprobado
-                            </option>
-                            <option value="reprobado" {{ $inscripcion->estado == 'reprobado' ? 'selected' : '' }}>
-                                Reprobado</option>
                         </select>
+                        <small class="form-text text-muted">
+                            "Aprobado" / "Reprobado" no se eligen manualmente: se calculan según el promedio del
+                            estudiante al finalizar el curso.
+                        </small>
                     </div>
 
                 </div>

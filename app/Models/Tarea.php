@@ -32,6 +32,7 @@ class Tarea extends Model
     ];
     protected $casts = [
         'fecha_entrega' => 'datetime',
+        'puntaje' => 'decimal:2',
         // 'fecha_apertura' => 'datetime',
         // 'permite_entregas_tardias' => 'boolean',
         // 'visible' => 'boolean',
