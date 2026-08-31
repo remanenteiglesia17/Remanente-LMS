@@ -85,7 +85,6 @@
                             <th>Cédula</th>
                             <th>Curso</th>
                             <th>Período</th>
-                            <th>Horas</th>
                             <th>Estado</th>
                             <th>Fecha Inscripción</th>
                             <th width="150" class="text-center">Acciones</th>
@@ -109,7 +108,6 @@
                                     <small class="text-muted"><?php echo e($inscripcion->codigo); ?></small>
                                 </td>
                                 <td><?php echo e($inscripcion->periodo); ?></td>
-                                <td><?php echo e($inscripcion->horas_realizadas); ?>h</td>
 
                                 <td>
                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php switch($inscripcion->estado):

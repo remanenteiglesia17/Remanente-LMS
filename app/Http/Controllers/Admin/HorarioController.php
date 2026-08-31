@@ -32,7 +32,7 @@ class HorarioController extends Controller
 
     public function create()
     {
-        $profesores = Profesor::all();
+        $profesores = Profesor::conRolVigente()->get();
         $cursos = Curso::all();
         $horarios = Horario::with('profesores', 'cursos')->get();
 
@@ -66,7 +66,6 @@ class HorarioController extends Controller
                     'clases.curso_id',
                     'clases.fecha_hora_inicio AS hora_inicio',
                     'clases.fecha_hora_fin AS hora_fin',
-                    DB::raw('DAYNAME(clases.fecha_hora_inicio) AS dia'),
                     'users.id AS user_id',
                     'users.name AS user_nombre',
                     'cursos.nombre AS curso_nombre',
@@ -78,16 +77,25 @@ class HorarioController extends Controller
                 ->where('clases.curso_id', $cursoId)
                 ->get();
 
-            // Traducir días al español
+            // Traducir días al español (calculado en PHP, no con DAYNAME()
+            // de MySQL, que rompía esta consulta en SQLite/Postgres).
             $horarios_asignados = $horarios_asignados->map(function ($horario) {
-                $horario->dia = DateHelper::traducirDia($horario->dia);
+                $horario->dia = DateHelper::traducirDia(
+                    Carbon::parse($horario->hora_inicio)->format('l')
+                );
 
                 return $horario;
             });
 
             return view('admin.horarios.show_datos_cursos', compact('horarios', 'horarios_asignados'));
-        } catch (\Exception $exception) {
-            return response()->json(['mensaje' => 'Error', 'detalle' => $exception->getMessage()]);
+        } catch (\Throwable $exception) {
+            Log::error('Fallo en show_datos_por_curso', [
+                'curso_id' => $cursoId,
+                'mensaje'  => $exception->getMessage(),
+                'archivo'  => $exception->getFile() . ':' . $exception->getLine(),
+            ]);
+
+            return response()->json(['mensaje' => 'Error', 'detalle' => $exception->getMessage()], 500);
         }
     }
 
@@ -120,7 +128,7 @@ public function show_datos_cursos($id)
                 'clases.id AS clase_id',
                 'clases.fecha_hora_inicio AS hora_inicio',
                 'clases.fecha_hora_fin AS hora_fin',
-                DB::raw('DAYNAME(clases.fecha_hora_inicio) AS dia'),
+                'users.id AS user_id',
                 'users.name AS user_nombre',
                 'cursos.nombre AS curso_nombre',
             ])
@@ -131,7 +139,14 @@ public function show_datos_cursos($id)
             ->where('clases.profesor_id', $id)
             ->get()
             ->map(function ($h) {
-                $h->dia = \App\Helpers\DateHelper::traducirDia($h->dia);
+                // El día se calcula en PHP (Carbon) en vez de con la función
+                // SQL DAYNAME(): esa función solo existe en MySQL y hacía
+                // fallar esta consulta completa en SQLite/Postgres (motor
+                // por defecto en Laravel 11), aun sin tener 'clases'
+                // registradas — por eso fallaba para TODOS los profesores.
+                $h->dia = \App\Helpers\DateHelper::traducirDia(
+                    \Carbon\Carbon::parse($h->hora_inicio)->format('l')
+                );
                 return $h;
             });
 
@@ -144,8 +159,21 @@ public function show_datos_cursos($id)
             'html_tabla'     => $tablaHtml,
             'mensaje'        => $tieneCurso ? 'Este profesor ya tiene el curso: ' . $cursoAsignado->nombre : null
         ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Error al procesar: ' . $e->getMessage()], 500);
+    } catch (\Throwable $e) {
+        // \Throwable (no solo \Exception) para no perder errores de tipo
+        // TypeError/Error que \Exception no captura, y así siempre devolver
+        // JSON en vez de dejar que Laravel muestre una página HTML de error
+        // (eso también rompe el .fail() del front, pero sin dar pistas).
+        Log::error('Fallo en show_datos_cursos', [
+            'profesor_id' => $id,
+            'mensaje'     => $e->getMessage(),
+            'archivo'     => $e->getFile() . ':' . $e->getLine(),
+            'trace'       => $e->getTraceAsString(),
+        ]);
+
+        return response()->json([
+            'error' => 'Error al procesar: ' . $e->getMessage(),
+        ], 500);
     }
 }
 
@@ -340,7 +368,7 @@ public function show_datos_cursos($id)
     public function edit(Horario $horario)
     {
         $horario->load(['profesores', 'cursos']); // Cargar relaciones
-        $profesores = Profesor::all();
+        $profesores = Profesor::conRolVigente()->get();
         $cursos = Curso::all();
 
         return response()->json(['horario' => $horario->toArray(),  'profesores' => $profesores, 'cursos' => $cursos]);
@@ -371,13 +399,13 @@ public function show_datos_cursos($id)
         );
 
         return redirect()->route('admin.horarios.index')
-            ->with(['info' => 'Horario actualizado correctamente.', 'icon', 'success']);
+            ->with(['info' => 'Horario actualizado correctamente.', 'icon' => 'success']);
     }
 
     public function destroy(Horario $horario)
     {
         $horario->delete();
 
-        return redirect()->route('admin.horarios.index')->with(['title' => 'Exito', 'info' => 'El horario se eliminó con éxito', 'icon', 'success']);
+        return redirect()->route('admin.horarios.index')->with(['title' => 'Exito', 'info' => 'El horario se eliminó con éxito', 'icon' => 'success']);
     }
 }

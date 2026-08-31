@@ -68,7 +68,7 @@ class UserController extends Controller
 
         $usuario = new User();
         $usuario->name = $request->name;
-        $usuario->apellido = $request->apellido;
+        $usuario->lastname = $request->apellido;
         $usuario->email = $request->email;
         $usuario->password = Hash::make($request->password);
         $usuario->save();
@@ -107,8 +107,6 @@ class UserController extends Controller
 
         if ($nombresRoles->contains('profesor') && !$usuario->fresh()->profesor) {
             Profesor::create([
-                'nombres'   => $usuario->name,
-                'apellidos' => $usuario->apellido,
                 'telefono'  => '',
                 'user_id'   => $usuario->id,
             ]);
@@ -160,7 +158,7 @@ class UserController extends Controller
         }
 
         $user->name = $request->name;
-        $user->apellido = $request->apellido;
+        $user->lastname = $request->apellido;
         $user->email = $request->email;
 
         // La contraseña solo se cambia si se escribió una nueva.

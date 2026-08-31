@@ -16,54 +16,57 @@ class ProfesorSeeder extends Seeder
     public function run(): void
     {
         //--------------------------------------------]
-        User::create([
+        $user = User::create([
             'name' => 'Profesor',
+            'lastname' => 'Lewis',
             'email' => 'profesor@email.com',
             'email_verified_at' => now(),
             'password' => bcrypt('123123123'),
-        ])->assignRole('profesor');
+        ]);
+        $user->assignRole('profesor');
+        // nombres/apellidos ya no se guardan aquí (viven en 'users', arriba)
         Profesor::create([
-            'nombres' => 'Profesor',
-            'apellidos' => 'Lewis',
             'telefono' => '4564564565',
-            'user_id' => '5',
+            'user_id' => $user->id,
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => 'TEACHER',
+            'lastname' => 'Gallardo',
             'email' => 'profesor1@email.com',
             'email_verified_at' => now(),
             'password' => bcrypt('123123123'),
-        ])->assignRole('profesor');
-        Profesor::create([
-            'nombres' => 'TEACHER',
-            'apellidos' => 'Gallardo',
-            'telefono' => '432324324',
-            'user_id' => '6',
         ]);
-        User::create([
+        $user->assignRole('profesor');
+        Profesor::create([
+            'telefono' => '432324324',
+            'user_id' => $user->id,
+        ]);
+
+        $user = User::create([
             'name' => 'Julio Profe',
+            'lastname' => 'Valdes',
             'email' => 'profesor2@email.com',
             'email_verified_at' => now(),
             'password' => bcrypt('123123213'),
-        ])->assignRole('profesor');
-        Profesor::create([
-            'nombres' => 'Julio Profe',
-            'apellidos' => 'Valdes',
-            'telefono' => '123123213',
-            'user_id' => '7',
         ]);
-        User::create([
+        $user->assignRole('profesor');
+        Profesor::create([
+            'telefono' => '123123213',
+            'user_id' => $user->id,
+        ]);
+
+        $user = User::create([
             'name' => 'Martin Profe',
+            'lastname' => 'Valdes',
             'email' => 'profesor3@email.com',
             'email_verified_at' => now(),
             'password' => bcrypt('123123213'),
-        ])->assignRole('profesor');
+        ]);
+        $user->assignRole('profesor');
         Profesor::create([
-            'nombres' => 'Martin Profe',
-            'apellidos' => 'Valdes',
             'telefono' => '123123213',
-            'user_id' => '8',
+            'user_id' => $user->id,
         ]);
         //--------------------------------------------]
     }

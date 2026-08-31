@@ -43,7 +43,7 @@ class ProfesorController extends Controller
 
         $usuario = new User();
         $usuario->name = $request->nombres;
-        $usuario->apellido = $request->apellidos;
+        $usuario->lastname = $request->apellidos;
         $usuario->email = $request->email;
 
         // Hash de la contraseña
@@ -52,10 +52,13 @@ class ProfesorController extends Controller
         }
 
         $usuario->save();
-        $profesor = $request->all();
-        $profesor['user_id'] = $usuario->id; // Asigna el ID del nuevo usuario al nuevo profesor
 
-        Profesor::create($profesor);
+        // Solo 'telefono' y 'user_id' viven en 'profesors'; nombres/apellidos
+        // ya se guardaron en 'users' arriba (no se duplican).
+        Profesor::create([
+            'telefono' => $request->telefono,
+            'user_id'  => $usuario->id,
+        ]);
         $usuario->assignRole('profesor');   // Asignar rol de 'profesor' al nuevo usuario
 
         return redirect()->route('admin.profesores.index')->with(['toast'=> 2,'info'=> 'Se registró el profesor de forma correcta','icon'=> 'success']);
@@ -84,10 +87,14 @@ class ProfesorController extends Controller
         'password' => 'nullable|min:8|confirmed',                                  // Permitir que la contraseña sea opcional
         ]);
         
-        $data['user_id'] = $profesor->user_id;                                     // Asignar el user_id actual a los datos
-        $profesor->update($data);                                                  // Actualiza el profesor
+        // Solo 'telefono' vive en 'profesors'; nombres/apellidos ahora
+        // solo existen en 'users' (antes se actualizaban aquí y NUNCA se
+        // reflejaban en 'users', dejando los dos lugares desincronizados).
+        $profesor->update(['telefono' => $data['telefono']]);
 
         $usuario = $profesor->user;                                                // Obtener el usuario asociado al profesor
+        $usuario->name = $data['nombres'];
+        $usuario->lastname = $data['apellidos'];
         $usuario->email = $data['email'];                                          // Actualizar el email del usuario
     
         if ($request->filled('password')) {$usuario->password = Hash::make($request['password']);}// Si el campo password se ha tocado

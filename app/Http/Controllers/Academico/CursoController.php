@@ -43,7 +43,6 @@ class CursoController extends Controller
             'codigo' => 'required|unique:cursos',
             'nombre' => 'required',
             'periodo' => 'required|string',
-            'horas_requeridas' => 'required|integer|min:1',
             'estado' => 'required|in:0,1',
             'descripcion' => 'required|string',
             'fecha_inicio' => 'nullable|date',
@@ -204,11 +203,7 @@ class CursoController extends Controller
 
         if ($user->hasAnyRole(['superAdmin', 'admin', 'secretaria', 'profesor'])) {
             $cursosEstudiantes = Estudiante::with(['cursos' => function ($q) {
-                $q->whereColumn(
-                    'estudiante_curso.horas_realizadas',
-                    '>=',
-                    'cursos.horas_requeridas'
-                );
+                $q->wherePivot('estado', 'aprobado');
             }])->get();
 
             return view('admin.content_cursos.partials.tasks.completados_all', compact('cursosEstudiantes'));
@@ -231,20 +226,19 @@ class CursoController extends Controller
         $cursosEstudiantes = DB::table('cursos')
             ->join('estudiante_curso', 'cursos.id', '=', 'estudiante_curso.curso_id')
             ->join('estudiantes', 'estudiante_curso.estudiante_id', '=', 'estudiantes.id')
+            ->join('users', 'users.id', '=', 'estudiantes.user_id') // nombres/apellidos ahora viven en 'users'
             ->select(
                 'estudiantes.id as estudiante_id',
-                DB::raw("CONCAT(estudiantes.nombres, ' ', estudiantes.apellidos) as estudiante_nombre"),
+                DB::raw("CONCAT(users.name, ' ', users.lastname) as estudiante_nombre"),
                 'cursos.id as curso_id',
                 'cursos.nombre as curso_nombre',
-                'cursos.horas_requeridas',
-                'estudiante_curso.horas_realizadas',
-                'estudiante_curso.fecha_realizacion'
+                'estudiante_curso.estado'
             )
             ->orderBy('estudiantes.id')
             ->get();
 
-        $cursosCompletados = $cursosEstudiantes->filter(fn ($c) => $c->horas_realizadas >= $c->horas_requeridas);
-        $cursosEnProgreso = $cursosEstudiantes->filter(fn ($c) => $c->horas_realizadas < $c->horas_requeridas);
+        $cursosCompletados = $cursosEstudiantes->filter(fn ($c) => $c->estado === 'aprobado');
+        $cursosEnProgreso = $cursosEstudiantes->filter(fn ($c) => $c->estado === 'activo');
 
         return view('admin.cursos.estadisticas', compact('cursosEstudiantes', 'cursosCompletados', 'cursosEnProgreso'));
     }

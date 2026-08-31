@@ -27,7 +27,6 @@
                         <th>Estudiante</th>
                         <th>Cédula</th>
                         <th>Fecha de inscripción</th>
-                        <th>Horas realizadas</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -43,9 +42,21 @@
                                     ? \Carbon\Carbon::parse($estudiante->fecha_inscripcion)->format('d/m/Y') 
                                     : '-' }}
                             </td>
-                            <td>{{ $estudiante->horas_realizadas ?? 0 }}h</td>
                             <td>
-                                <span class="badge badge-success">Activo</span>
+                                @php $estadoEst = $estudiante->estado ?? 'activo'; @endphp
+                                @switch($estadoEst)
+                                    @case('aprobado')
+                                        <span class="badge badge-success">Aprobado</span>
+                                        @break
+                                    @case('reprobado')
+                                        <span class="badge badge-danger">Reprobado</span>
+                                        @break
+                                    @case('retirado')
+                                        <span class="badge badge-warning">Retirado</span>
+                                        @break
+                                    @default
+                                        <span class="badge badge-primary">Activo</span>
+                                @endswitch
                             </td>
                             <td>
                                 <a href="{{ route('admin.estudiantes.show', $estudiante->id) }}" 

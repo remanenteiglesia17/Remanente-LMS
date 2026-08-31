@@ -16,21 +16,22 @@ class SecretariaSeeder extends Seeder
     public function run(): void
     {
          //----------[  SECRETARIA  ]-------------
-         User::create([
+         $user = User::create([
             'name' => 'Secretaria',
+            'lastname' => 'Catrana',
             'email' => 'secretaria@email.com',
             'email_verified_at' => now(),
             'password' => bcrypt('123123123'),
-        ])->assignRole('secretaria');
+        ]);
+        $user->assignRole('secretaria');
 
+        // nombres/apellidos ya no se guardan aquí (viven en 'users', arriba)
         Secretaria::create([
-            'nombres' => 'Secretaria',
-            'apellidos' => 'Catrana',
             'cc' => '1112036545',
             'telefono' => '3147078256',
             'fecha_nacimiento' => '22/10/2010',
             'direccion' => 'calle 5 o este',
-            'user_id' => '4',
+            'user_id' => $user->id,
         ]);
         // -------------------------------------------------
     }

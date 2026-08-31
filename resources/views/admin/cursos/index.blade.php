@@ -38,7 +38,7 @@
                             <tr>
                                 <th>Nro</th>
                                 <th>Curso</th>
-                                <th>Horas</th>
+                                <th>Periodo</th>
                                 <th>Ver</th>
                                 @if (!Auth::user()->estudiante)
                                     <th>Estado</th>
@@ -52,7 +52,7 @@
                                 <tr>
                                     <td scope="row">{{ $contador++ }}</td>
                                     <td scope="row">{{ $curso->nombre }}</td>
-                                    <td scope="row">{{ $curso->horas_requeridas }}</td>
+                                    <td scope="row">{{ $curso->periodo }}</td>
                                     <td scope="row">
                                         {{-- Botón VER --}}
                                         <a href="{{ route('admin.cursos.show', $curso) }}" class="btn btn-sm btn-info"

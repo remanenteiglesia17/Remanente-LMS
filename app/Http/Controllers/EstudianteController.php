@@ -24,7 +24,14 @@ class EstudianteController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Estudiante::with('user')->select('estudiantes.*');
+            // nombres/apellidos ya no viven en 'estudiantes' (se movieron a
+            // 'users' para no duplicar el dato). Se hace JOIN y se alían las
+            // columnas para que Yajra DataTables pueda seguir ordenando y
+            // buscando por 'nombres'/'apellidos' como columnas SQL reales.
+            $query = Estudiante::query()
+                ->with('user')
+                ->join('users', 'users.id', '=', 'estudiantes.user_id')
+                ->select('estudiantes.*', 'users.name as nombres', 'users.lastname as apellidos');
 
             return DataTables::eloquent($query)->addColumn('action', function ($estudiante) { // Puedes devolver botones (renderizar un partial)
                 return view('admin.estudiantes.partials.actions', compact('estudiante'))->render();
@@ -52,11 +59,13 @@ class EstudianteController extends Controller
         try {
             DB::beginTransaction();  // ⬅️ Comienza la transacción
 
-            $usuario = User::create(['name' => $request->nombres, 'apellido' => $request->apellidos, 'email' => $request->correo, 'password' => Hash::make($request->password ?? $request->cc)]);
+            $usuario = User::create(['name' => $request->nombres, 'lastname' => $request->apellidos, 'email' => $request->correo, 'password' => Hash::make($request->password ?? $request->cc)]);
             $usuario->assignRole('estudiante');
 
+            // nombres/apellidos ya viven en 'users' (arriba); no se duplican
+            // en 'estudiantes', así que se quitan antes de crear el registro.
+            unset($validatedData['nombres'], $validatedData['apellidos'], $validatedData['correo']);
             $validatedData['user_id'] = $usuario->id;                            // Asociar el user_id al estudiante
-            unset($validatedData['correo']);
             $validatedData['observaciones'] = $request->observaciones;
 
             $estudiante = Estudiante::create($validatedData);                          // Crear estudiante
@@ -64,7 +73,7 @@ class EstudianteController extends Controller
 
             if ($request->has('cursos') && is_array($request->cursos)) {          // Asignar cursos si existen
                 foreach ($request->cursos as $cursoId) {
-                    $estudiante->cursos()->attach($cursoId, ['horas_realizadas' => 0]);
+                    $estudiante->cursos()->attach($cursoId);
                 }
             }
             if (!isset($estudiante)) { // $clase->delete();
@@ -115,8 +124,10 @@ class EstudianteController extends Controller
             'contacto_emergencia' => 'required',
         ]);
 
-        // Actualizar datos del usuario (email)
+        // Actualizar datos del usuario (nombre, apellido, email)
         $usuario = User::findOrFail($estudiante->user_id);
+        $usuario->name = $request->nombres;
+        $usuario->lastname = $request->apellidos;
         $usuario->email = $request->email;
 
         if ($request->has('reset_password')) {
@@ -124,7 +135,8 @@ class EstudianteController extends Controller
         }
         $usuario->save();
 
-        unset($validatedData['email']);                   // Quitar el email del array porque no existe en estudiantes
+        // nombres/apellidos/email ya no existen como columnas en 'estudiantes'
+        unset($validatedData['email'], $validatedData['nombres'], $validatedData['apellidos']);
         $estudiante->observaciones = $request->observaciones;
 
         $estudiante->update($validatedData);                 // Actualizar Estudiante
@@ -277,38 +289,75 @@ class EstudianteController extends Controller
         return view('estudiante.curso.tareas', compact('curso', 'estudiante', 'tareas'));
     }
 
-    /**
+/**
      * Ver mis calificaciones.
      */
     public function misCalificaciones()
     {
-        $estudiante = Estudiante::where('user_id', Auth::id())->first();
+        $estudiante = Estudiante::where('user_id', Auth::id())
+            ->with(['calificaciones', 'cursos'])
+            ->first();
 
         if (!$estudiante) {
             return redirect()->route('dashboard')
                 ->with('error', 'No se encontró información de estudiante.');
         }
 
-        $curso = $estudiante->cursos()
+        // Cargar todos los cursos activos del estudiante
+        $cursos = $estudiante->cursos()
             ->where('cursos.estado', true)
-            ->first();
+            ->with(['tareas'])
+            ->get();
 
-        if (!$curso) {
+        if ($cursos->isEmpty()) {
             return view('estudiante.sin-curso');
         }
 
-        // Obtener tareas con entregas calificadas
-        $tareas = $curso->tareas()
-            ->with(['entregas' => function ($query) use ($estudiante) {
-                $query->where('estudiante_id', $estudiante->id)
-                      ->whereNotNull('calificacion');
-            }])
-            ->get();
+        $promedios = [];
 
-        // Calcular nota promedio
-        $entregas = $tareas->pluck('entregas')->flatten();
-        $notaPromedio = $entregas->avg('calificacion');
+        foreach ($cursos as $curso) {
+            // Tareas pertenecientes al curso
+            $tareasDelCurso = $curso->tareas;
+            $totalTareasCurso = $tareasDelCurso->count();
+            $titulosTareas = $tareasDelCurso->pluck('titulo_tarea')->toArray();
 
-        return view('estudiante.curso.calificaciones', compact('curso', 'estudiante', 'tareas', 'notaPromedio'));
+            // Filtrar las calificaciones del estudiante que correspondan a las tareas de este curso
+            $calificacionesCurso = $estudiante->calificaciones
+                ->whereIn('concepto', $titulosTareas)
+                ->whereNotNull('nota');
+
+            // 1. Promedio Ponderado / Acumulada del Estudiante (Únicamente sobre tareas calificadas)
+            $promedioEstudiante = $calificacionesCurso->avg('nota') ?? 0;
+
+            // 2. Promedio General del Grupo (Opcional, promediando todos los estudiantes)
+            $promedioCurso = DB::table('calificaciones')
+                ->whereIn('concepto', $titulosTareas)
+                ->whereNotNull('nota')
+                ->avg('nota') ?? 0;
+
+            // Totales de control
+            $totalCalificadas = $calificacionesCurso->count();
+            $porcentajeCompletado = $totalTareasCurso > 0 
+                ? round(($totalCalificadas / $totalTareasCurso) * 100) 
+                : 0;
+
+            $aprobado = $promedioEstudiante >= 3.0;
+
+            $promedios[$curso->id] = [
+                'curso' => $curso,
+                'promedio' => $promedioEstudiante,
+                'promedio_curso' => $promedioCurso,
+                'total_calificaciones' => $totalCalificadas,
+                'total_tareas_curso' => $totalTareasCurso,
+                'porcentaje_completado' => $porcentajeCompletado,
+                'aprobado' => $aprobado,
+                'puede_descargar' => $aprobado && ($porcentajeCompletado == 100),
+                'razon_bloqueo' => !$aprobado 
+                    ? 'Tu promedio actual es inferior a 3.0' 
+                    : 'Aún tienes tareas pendientes por evaluar'
+            ];
+        }
+
+        return view('estudiante.index', compact('promedios', 'estudiante'));
     }
 }

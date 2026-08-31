@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Estudiante;
 use App\Models\HistorialCurso;
 use App\Models\Curso;
+use Illuminate\Support\Facades\DB;
 
 class HistorialCursoController extends Controller
 {
@@ -30,7 +31,7 @@ class HistorialCursoController extends Controller
             return response()->json(['message' => 'Curso no inscrito'], 404);
         }
 
-        if ($registro->horas_realizadas < $curso->horas_requeridas) {
+        if ($registro->estado !== 'aprobado') {
             return response()->json(['message' => 'Curso aún no completado'], 400);
         }
 

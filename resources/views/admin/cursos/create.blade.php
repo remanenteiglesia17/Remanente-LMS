@@ -44,16 +44,6 @@
 
                         <div class="col-md-2 col-sm-2">
                             <div class="form-group">
-                                <label for="horas_requeridas">horas requeridas </label><b class="text-danger">*</b>
-                                <input type="number" class="form-control" name="horas_requeridas"
-                                    value="{{ old('horas_requeridas') }}" required>
-                                @error('horas_requeridas')
-                                    <small class="bg-danger text-white p-1">{{ $message }}</small>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-sm-2">
-                            <div class="form-group">
                                 <label for="estado">Estado </label><b class="text-danger">*</b>
                                 <select name="estado" id="" class="form-control" required>
                                     <!-- Opción por defecto -->

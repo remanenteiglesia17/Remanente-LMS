@@ -19,15 +19,15 @@ class PerfilCompletarController extends Controller
     protected function definicionCampos(): array
     {
         return [
-            'nombres' => ['roles' => ['estudiante', 'profesor', 'secretaria'], 'tipo' => 'text', 'requerido' => true, 'label' => 'Nombres'],
+            'nombres' =>   ['roles' => ['estudiante', 'profesor', 'secretaria'], 'tipo' => 'text', 'requerido' => true, 'label' => 'Nombres'],
             'apellidos' => ['roles' => ['estudiante', 'profesor', 'secretaria'], 'tipo' => 'text', 'requerido' => true, 'label' => 'Apellidos'],
-            'telefono' => ['roles' => ['estudiante', 'profesor', 'secretaria'], 'tipo' => 'text', 'requerido' => true, 'label' => 'Teléfono'],
-            'cc' => ['roles' => ['estudiante', 'secretaria'], 'tipo' => 'number', 'requerido' => true, 'label' => 'Cédula'],
+            'telefono' =>  ['roles' => ['estudiante', 'profesor', 'secretaria'], 'tipo' => 'number', 'requerido' => true, 'label' => 'Teléfono'],
+            'cc' =>        ['roles' => ['estudiante', 'secretaria'], 'tipo' => 'number', 'requerido' => true, 'label' => 'Cédula'],
             'direccion' => ['roles' => ['estudiante', 'secretaria'], 'tipo' => 'text', 'requerido' => true, 'label' => 'Dirección'],
-            'genero' => ['roles' => ['estudiante'], 'tipo' => 'select', 'requerido' => true, 'label' => 'Género', 'opciones' => ['Masculino', 'Femenino', 'Otro']],
-            'fecha_nacimiento' => ['roles' => ['secretaria'], 'tipo' => 'date', 'requerido' => true, 'label' => 'Fecha de nacimiento'],
+            'genero' =>    ['roles' => ['estudiante'], 'tipo' => 'select', 'requerido' => true, 'label' => 'Género', 'opciones' => ['Masculino', 'Femenino', 'Otro']],
+            'fecha_nacimiento' =>    ['roles' => ['secretaria'], 'tipo' => 'date', 'requerido' => true, 'label' => 'Fecha de nacimiento'],
             'contacto_emergencia' => ['roles' => ['estudiante'], 'tipo' => 'number', 'requerido' => false, 'label' => 'Contacto de emergencia'],
-            'observaciones' => ['roles' => ['estudiante'], 'tipo' => 'textarea', 'requerido' => false, 'label' => 'Observaciones'],
+            'observaciones' =>       ['roles' => ['estudiante'], 'tipo' => 'textarea', 'requerido' => false, 'label' => 'Observaciones'],
         ];
     }
 
@@ -59,14 +59,19 @@ class PerfilCompletarController extends Controller
         $data = $request->validate($this->reglasValidacion($campos, $roles));
 
         // Nombres/apellidos: si ya vienen del usuario (capturados al crearlo), se usan esos;
-        // si no, se toman del formulario (usuarios creados antes de este cambio).
+        // si no, se toman del formulario y se guardan en 'users' (único lugar
+        // donde vive el nombre; Estudiante/Profesor/Secretaria ya no lo duplican).
         $nombres = $data['nombres'] ?? $user->name;
-        $apellidos = $data['apellidos'] ?? $user->apellido;
+        $apellidos = $data['apellidos'] ?? $user->lastname;
+
+        if (isset($data['nombres']) || isset($data['apellidos'])) {
+            $user->name = $nombres;
+            $user->lastname = $apellidos;
+            $user->save();
+        }
 
         if (in_array('estudiante', $roles)) {
             Estudiante::create([
-                'nombres' => $nombres,
-                'apellidos' => $apellidos,
                 'cc' => $data['cc'],
                 'genero' => $data['genero'],
                 'telefono' => $data['telefono'],
@@ -79,8 +84,6 @@ class PerfilCompletarController extends Controller
 
         if (in_array('profesor', $roles)) {
             Profesor::create([
-                'nombres' => $nombres,
-                'apellidos' => $apellidos,
                 'telefono' => $data['telefono'],
                 'user_id' => $user->id,
             ]);
@@ -88,8 +91,6 @@ class PerfilCompletarController extends Controller
 
         if (in_array('secretaria', $roles)) {
             Secretaria::create([
-                'nombres' => $nombres,
-                'apellidos' => $apellidos,
                 'cc' => $data['cc'],
                 'telefono' => $data['telefono'],
                 'fecha_nacimiento' => $data['fecha_nacimiento'],
@@ -169,7 +170,7 @@ class PerfilCompletarController extends Controller
                 continue;
             }
 
-            if (in_array($nombre, ['nombres', 'apellidos']) && $user->name && $user->apellido) {
+            if (in_array($nombre, ['nombres', 'apellidos']) && $user->name && $user->lastname) {
                 continue;
             }
 

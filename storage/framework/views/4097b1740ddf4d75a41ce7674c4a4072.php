@@ -38,7 +38,7 @@
                             <tr>
                                 <th>Nro</th>
                                 <th>Curso</th>
-                                <th>Horas</th>
+                                <th>Periodo</th>
                                 <th>Ver</th>
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!Auth::user()->estudiante): ?>
                                     <th>Estado</th>
@@ -52,7 +52,7 @@
                                 <tr>
                                     <td scope="row"><?php echo e($contador++); ?></td>
                                     <td scope="row"><?php echo e($curso->nombre); ?></td>
-                                    <td scope="row"><?php echo e($curso->horas_requeridas); ?></td>
+                                    <td scope="row"><?php echo e($curso->periodo); ?></td>
                                     <td scope="row">
                                         
                                         <a href="<?php echo e(route('admin.cursos.show', $curso)); ?>" class="btn btn-sm btn-info"

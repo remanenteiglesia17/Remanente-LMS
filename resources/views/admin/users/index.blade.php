@@ -20,12 +20,22 @@
             @endcan
         </div>
         <div class="card-body">
+            <div class="form-inline mb-3">
+                <label for="filtroRol" class="mr-2">Filtrar por rol:</label>
+                <select id="filtroRol" class="form-control form-control-sm">
+                    <option value="">-- Todos los roles --</option>
+                    @foreach ($roles as $role)
+                        <option value="{{ $role->name }}">{{ $role->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <table id="usuarios" class="table table-striped table-bordered table-hover table-sm">
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
                         <th>Nombre</th>
                         <th>Email</th>
+                        <th>Rol</th>
                         <th class="text-center"> Acciones </th>
                     </tr>
                 </thead>
@@ -35,6 +45,7 @@
                             <td>{{ $user->id }}</td>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
+                            <td>{{ $user->roles->pluck('name')->implode(', ') }}</td>
                             <td class="text-center">
                                 @can('admin.users.edit')
                                     {{-- button EDIT --}}
@@ -58,7 +69,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center">No hay permisos registrados.</td>
+                            <td colspan="5" class="text-center">No hay permisos registrados.</td>
                         </tr>
                     @endforelse
 
@@ -74,7 +85,7 @@
 @stop
 @section('js')
     <script>
-        new DataTable('#usuarios', {
+        const tablaUsuarios = new DataTable('#usuarios', {
             responsive: true,
             scrollX: true,
             autoWidth: false, //no le vi la funcionalidad
@@ -133,6 +144,15 @@
                 }
             }
         });
+
+        // Filtro por rol: la columna "Rol" es el índice 3 (ID, Nombre, Email, Rol, Acciones).
+        // Se usa una expresión regular con límites de palabra para no confundir
+        // "profesor" con "profesor1" u otro rol que lo contenga como substring.
+        $('#filtroRol').on('change', function() {
+            const rol = this.value;
+            const regex = rol ? '\\b' + rol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b' : '';
+            tablaUsuarios.column(3).search(regex, true, false).draw();
+        });
     </script>
     <script>
         $('#editModal').on('show.bs.modal', function(event) {
@@ -154,7 +174,7 @@
 
                     // Populate the user's name, apellido and email
                     modal.find('#edit-name').val(data.user.name);
-                    modal.find('#edit-apellido').val(data.user.apellido);
+                    modal.find('#edit-apellido').val(data.user.lastname);
                     modal.find('#edit-email').val(data.user.email);
 
                     // La contraseña nunca se precarga; se limpia en cada apertura del modal

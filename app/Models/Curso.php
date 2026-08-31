@@ -14,7 +14,6 @@ class Curso extends Model
         'descripcion',
         'estado',
         'periodo',
-        'horas_requeridas',
         'fecha_inicio',
         'fecha_fin',
     ];
@@ -83,7 +82,7 @@ class Curso extends Model
     public function estudiantes()
     {
         return $this->belongsToMany(Estudiante::class, 'estudiante_curso', 'curso_id', 'estudiante_id')
-        ->withPivot('horas_realizadas', 'fecha_inscripcion')
+        ->withPivot('estado', 'fecha_inscripcion')
         ->withTimestamps();
     }
 }

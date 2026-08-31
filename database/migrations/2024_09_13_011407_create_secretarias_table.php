@@ -9,8 +9,7 @@ return new class extends Migration {
     {
         Schema::create('secretarias', function (Blueprint $table) {
             $table->id(); // JD
-            $table->string('nombres');
-            $table->string('apellidos');
+            // nombres/apellidos viven en 'users' (no se duplican aquí)
             $table->integer('cc')->unique();
             $table->string('telefono', 100);
             $table->string('fecha_nacimiento', 100);

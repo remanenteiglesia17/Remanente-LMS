@@ -26,18 +26,18 @@ class HorarioSeeder extends Seeder
         // codigo => [ [profesor_index, dia, hora_inicio, hora_fin], ... ]
         $asignaciones = [
             // Profesor 1 (Lewis) dicta 2 cursos
-            ['profesor' => 0, 'curso' => 'ANT-2026', 'dia' => 'LUNES', 'inicio' => '06:00:00', 'fin' => '09:00:00'],
-            ['profesor' => 0, 'curso' => 'TEO-2026', 'dia' => 'MIERCOLES', 'inicio' => '06:00:00', 'fin' => '09:00:00'],
+            ['profesor' => 0, 'curso' => 'ANT-2026', 'dia' => 'LUNES', 'inicio' => '06:00:00', 'fin' => '09:00:00', 'fecha_inicio' => '2026-01-01', 'fecha_fin' => '2026-06-30'],
+            ['profesor' => 0, 'curso' => 'TEO-2026', 'dia' => 'MIERCOLES', 'inicio' => '06:00:00', 'fin' => '09:00:00', 'fecha_inicio' => '2026-01-01', 'fecha_fin' => '2026-06-30'],
 
             // Profesor 2 (TEACHER Gallardo) dicta 2 cursos (uno compartido con Lewis)
-            ['profesor' => 1, 'curso' => 'ANT-2026', 'dia' => 'MARTES', 'inicio' => '18:00:00', 'fin' => '20:00:00'],
-            ['profesor' => 1, 'curso' => 'EV-2026', 'dia' => 'JUEVES', 'inicio' => '18:00:00', 'fin' => '20:00:00'],
+            ['profesor' => 1, 'curso' => 'ANT-2026', 'dia' => 'MARTES', 'inicio' => '18:00:00', 'fin' => '20:00:00', 'fecha_inicio' => '2026-01-01', 'fecha_fin' => '2026-06-30'],
+            ['profesor' => 1, 'curso' => 'EV-2026', 'dia' => 'JUEVES', 'inicio' => '18:00:00', 'fin' => '20:00:00', 'fecha_inicio' => '2026-01-01', 'fecha_fin' => '2026-06-30'],
 
             // Profesor 3 (Julio) dicta 1 curso
-            ['profesor' => 2, 'curso' => 'EV-2026', 'dia' => 'SABADO', 'inicio' => '08:00:00', 'fin' => '11:00:00'],
+            ['profesor' => 2, 'curso' => 'EV-2026', 'dia' => 'SABADO', 'inicio' => '08:00:00', 'fin' => '11:00:00', 'fecha_inicio' => '2026-01-01', 'fecha_fin' => '2026-06-30'],
 
             // Profesor 4 (Martin) dicta 1 curso
-            ['profesor' => 3, 'curso' => 'TEO-2026', 'dia' => 'VIERNES', 'inicio' => '18:00:00', 'fin' => '20:00:00'],
+            ['profesor' => 3, 'curso' => 'TEO-2026', 'dia' => 'VIERNES', 'inicio' => '18:00:00', 'fin' => '20:00:00', 'fecha_inicio' => '2026-01-01', 'fecha_fin' => '2026-06-30'],
         ];
 
         foreach ($asignaciones as $a) {

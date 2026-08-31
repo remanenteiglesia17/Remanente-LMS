@@ -13,18 +13,39 @@ class Estudiante extends Model
     protected $table = "estudiantes";
 
     protected $guard_name = 'web';
+
+    // Necesario para que 'nombres'/'apellidos' (accessors) aparezcan en las
+    // respuestas JSON (response()->json($estudiante)) usadas por los modales
+    // de edición/detalle, ya que no son columnas reales de la tabla.
+    protected $appends = ['nombres', 'apellidos'];
     // protected $guarded = ['created_at', 'updated_at'];
-    protected $fillable = ['nombres', 'apellidos', 'cc', 'genero', 'telefono', 'email', 'direccion', 'contacto_emergencia', 'observaciones', 'user_id',];
+    protected $fillable = ['cc', 'genero', 'telefono', 'email', 'direccion', 'contacto_emergencia', 'observaciones', 'user_id',];
 
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }  // Estudiante pertenece a un Usuario
+
+    /**
+     * nombres/apellidos ya NO se guardan en esta tabla (se duplicaban
+     * con 'users'). Estos accessors los leen del User asociado para que
+     * el resto del código ($estudiante->nombres, etc.) siga funcionando
+     * igual que antes sin tener que tocar cada vista/controlador.
+     */
+    public function getNombresAttribute()
+    {
+        return $this->user?->name;
+    }
+
+    public function getApellidosAttribute()
+    {
+        return $this->user?->lastname;
+    }
     public function cursos()
     {
         return $this->belongsToMany(Curso::class, 'estudiante_curso')
-            ->withPivot('fecha_inscripcion', 'horas_realizadas', 'estado');
+            ->withPivot('fecha_inscripcion', 'estado');
     }
     public function calificaciones()
     {
@@ -48,12 +69,12 @@ class Estudiante extends Model
     public function cursosEnProgreso()
     {
         return $this->cursos()
-            ->whereColumn('estudiante_curso.horas_realizadas', '<', 'cursos.horas_requeridas');
+            ->wherePivot('estado', 'activo');
     }
     public function cursosCompletados()
     {
         return $this->cursos()
-            ->whereColumn('estudiante_curso.horas_realizadas', '>=', 'cursos.horas_requeridas');
+            ->wherePivot('estado', 'aprobado');
     }
     // Calcular porcentaje de asistencia
     public function porcentajeAsistencia($cursoId = null)
@@ -77,6 +98,6 @@ class Estudiante extends Model
 
     public function getNombreCompletoAttribute()
     {
-        return "{$this->nombres} {$this->apellidos}";
+        return trim("{$this->nombres} {$this->apellidos}");
     }
 }

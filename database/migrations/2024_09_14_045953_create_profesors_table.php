@@ -9,8 +9,7 @@ return new class extends Migration {
     {
         Schema::create('profesors', function (Blueprint $table) {
             $table->id();
-            $table->string('nombres');
-            $table->string('apellidos');
+            // nombres/apellidos viven en 'users' (no se duplican aquí)
             $table->string('telefono');
             // $table->string('especialidad'); //JD
             $table->unsignedBigInteger('user_id');

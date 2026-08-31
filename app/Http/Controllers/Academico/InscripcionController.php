@@ -19,26 +19,26 @@ class InscripcionController extends Controller
     {
         $inscripciones = DB::table('estudiante_curso')
             ->join('estudiantes', 'estudiante_curso.estudiante_id', '=', 'estudiantes.id')
+            ->join('users', 'users.id', '=', 'estudiantes.user_id') // nombres/apellidos ahora viven en 'users'
             ->join('cursos', 'estudiante_curso.curso_id', '=', 'cursos.id')
             ->select(
                 'estudiante_curso.id',
                 'estudiantes.id as estudiante_id',
-                'estudiantes.nombres',
-                'estudiantes.apellidos',
+                'users.name as nombres',
+                'users.lastname as apellidos',
                 'estudiantes.cc',
                 'cursos.id as curso_id',
                 'cursos.nombre as curso_nombre',
                 'cursos.codigo',
                 'cursos.periodo',
                 'estudiante_curso.estado',
-                'estudiante_curso.fecha_inscripcion',
-                'estudiante_curso.horas_realizadas'
+                'estudiante_curso.fecha_inscripcion'
             )
             ->when($request->filled('buscar'), function ($q) use ($request) {
                 $buscar = $request->buscar;
                 $q->where(function ($sub) use ($buscar) {
-                    $sub->where('estudiantes.nombres', 'like', "%{$buscar}%")
-                        ->orWhere('estudiantes.apellidos', 'like', "%{$buscar}%")
+                    $sub->where('users.name', 'like', "%{$buscar}%")
+                        ->orWhere('users.lastname', 'like', "%{$buscar}%")
                         ->orWhere('estudiantes.cc', 'like', "%{$buscar}%");
                 });
             })
@@ -60,7 +60,10 @@ class InscripcionController extends Controller
     {
         // Estudiantes que NO estén inscritos en ningún curso
         $estudiantes = Estudiante::whereDoesntHave('cursos')
-            ->orderBy('nombres')
+            ->join('users', 'users.id', '=', 'estudiantes.user_id') // nombres/apellidos ahora viven en 'users'
+            ->orderBy('users.name')
+            ->select('estudiantes.*')
+            ->with('user')
             ->get();
 
         // Cursos activos
@@ -68,15 +71,23 @@ class InscripcionController extends Controller
             ->orderBy('nombre')
             ->get();
         // Profesores iniciales (opcional, se cargarán vía AJAX por curso)
-        $profesores = Profesor::orderBy('nombres')->get();
+        $profesores = Profesor::conRolVigente()
+            ->join('users', 'users.id', '=', 'profesors.user_id')
+            ->orderBy('users.name')
+            ->select('profesors.*')
+            ->with('user')
+            ->get();
         return view('admin.inscripciones.create', compact('estudiantes', 'cursos', 'profesores'));
     }
     // Método para obtener profesores por curso vía AJAX
     public function getProfesoresPorCurso($cursoId)
     {
-        $profesores = Profesor::whereHas('horarios.cursos', function ($q) use ($cursoId) {
-            $q->where('curso_id', $cursoId);
-        })->get(['profesors.id', 'nombres', 'apellidos']); // Ajusta nombres de campos si es necesario
+        // nombres/apellidos ya no son columnas de 'profesors'; se resuelven
+        // como accessors desde 'user' (con $appends, salen en el JSON solos).
+        $profesores = Profesor::conRolVigente()
+            ->whereHas('horarios.cursos', function ($q) use ($cursoId) {
+                $q->where('curso_id', $cursoId);
+            })->with('user')->get();
         Log::info("Profesores para el curso ID $cursoId: " . $profesores->toJson());
         return response()->json($profesores);
     }
@@ -99,7 +110,6 @@ class InscripcionController extends Controller
                 ['estudiante_id' => $request->estudiante_id, 'curso_id' => $request->curso_id],
                 [
                     'fecha_inscripcion' => now(),
-                    'horas_realizadas'  => 0,
                     'estado'            => 'activo',
                     'updated_at'        => now(),
                 ]
@@ -173,7 +183,6 @@ class InscripcionController extends Controller
                         'curso_id'          => $cursoId,
                         'profesor_id'       => $profesorId,
                         'fecha_inscripcion' => now(),
-                        'horas_realizadas'  => 0,
                         'created_at'        => now(),
                         'updated_at'        => now(),
                     ]);
@@ -287,14 +296,16 @@ class InscripcionController extends Controller
         $curso = Curso::findOrFail($cursoId);
 
         $estudiantes = Estudiante::join('estudiante_curso', 'estudiantes.id', '=', 'estudiante_curso.estudiante_id')
+            ->join('users', 'users.id', '=', 'estudiantes.user_id') // nombres/apellidos ahora viven en 'users'
             ->where('estudiante_curso.curso_id', $cursoId)
             ->select(
                 'estudiantes.*',
                 'estudiante_curso.fecha_inscripcion',
-                'estudiante_curso.horas_realizadas',
+                'estudiante_curso.estado',
                 'estudiante_curso.id as inscripcion_id'
             )
-            ->orderBy('estudiantes.nombres')
+            ->with('user')
+            ->orderBy('users.name')
             ->get();
 
         return view('admin.inscripciones.estudiantes', compact('curso', 'estudiantes'));

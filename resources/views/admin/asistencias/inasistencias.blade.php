@@ -36,7 +36,7 @@
                         <tbody>
                             @foreach ($estudiantes as $estudiante)
                                 <tr>
-                                    <td>{{ $estudiante->nombre . ' ' . $estudiante->apellido }}</td>
+                                    <td>{{ $estudiante->nombres . ' ' . $estudiante->apellidos }}</td>
                                     <td>{{ $estudiante->nombre_evento }}</td>
                                     <td>{{ $estudiante->date }}</td>
                                     <td>{{ $estudiante->start . ' ' . $estudiante->end }}</td>

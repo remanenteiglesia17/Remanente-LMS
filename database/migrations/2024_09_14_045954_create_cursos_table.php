@@ -20,7 +20,6 @@ return new class extends Migration {
             
             // Estado del curso JD
             $table->boolean('estado')->default(true); // activo / inactivo 
-            $table->integer('horas_requeridas')->default(0); 
             
              
             $table->timestamps();

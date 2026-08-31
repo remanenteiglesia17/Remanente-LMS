@@ -12,7 +12,6 @@
                     <th>Código</th>
                     <th>Periodo</th>
                     <th>Fecha de inscripción</th>
-                    <th>Horas realizadas</th>
                     <th>Estado</th>
                 </tr>
             </thead>
@@ -28,10 +27,6 @@
                             {{ $curso->pivot->fecha_inscripcion
                                 ? \Carbon\Carbon::parse($curso->pivot->fecha_inscripcion)->format('d/m/Y')
                                 : '-' }}
-                        </td>
-
-                        <td>
-                            {{ $curso->pivot->horas_realizadas ?? 0 }}
                         </td>
 
                         <td>

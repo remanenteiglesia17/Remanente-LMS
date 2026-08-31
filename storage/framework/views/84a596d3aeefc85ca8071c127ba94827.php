@@ -116,35 +116,35 @@
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                                         <?php
-                                            $notaFinalBD = 0;
-                                            $pesoBD = 0;
+                                            $sumaNotasBD = 0;
+                                            $conteoNotasBD = 0;
+
                                             foreach ($tareasDelCurso as $t) {
                                                 $cal = $estudiante->calificaciones->where('concepto', $t->titulo_tarea)->first();
-                                                if ($cal) {
-                                                    $notaFinalBD += $cal->nota;
-                                                    $pesoBD += $t->puntaje;
+                                                if ($cal && $cal->nota !== null && $cal->nota !== '') {
+                                                    $sumaNotasBD += (float)$cal->nota;
+                                                    $conteoNotasBD++;
                                                 }
                                             }
-                                            if ($pesoBD > 0) {
-                                                $notaFinalBD = ($notaFinalBD / $pesoBD) * 5;
-                                            }
-                                            $aprobadoBD = $pesoBD > 0 && $notaFinalBD >= 3.0;
+
+                                            $notaFinalBD = $conteoNotasBD > 0 ? ($sumaNotasBD / $conteoNotasBD) : 0;
+                                            $aprobadoBD = $conteoNotasBD > 0 && $notaFinalBD >= 3.0;
                                         ?>
                                         
                                         
                                         <td class="text-center align-middle" style="min-width:90px">
-                                            <span class="badge nota-final <?php echo e($pesoBD > 0 ? ($aprobadoBD ? 'badge-success' : 'badge-danger') : 'badge-secondary'); ?> d-block mb-1"
+                                            <span class="badge nota-final <?php echo e($conteoNotasBD > 0 ? ($aprobadoBD ? 'badge-success' : 'badge-danger') : 'badge-secondary'); ?> d-block mb-1"
                                                 id="final-<?php echo e($estudiante->id); ?>"
                                                 style="font-size:14px;padding:5px 8px">
-                                                <?php echo e($pesoBD > 0 ? number_format($notaFinalBD, 2) : '—'); ?>
+                                                <?php echo e($conteoNotasBD > 0 ? number_format($notaFinalBD, 2) : '—'); ?>
 
                                             </span>
                                             <span class="estado-final" id="estado-<?php echo e($estudiante->id); ?>">
-                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($pesoBD > 0 && $aprobadoBD): ?>
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($conteoNotasBD > 0 && $aprobadoBD): ?>
                                                     <span class="badge badge-success" style="font-size:11px">
                                                         <i class="fas fa-check-circle"></i> Aprobado
                                                     </span>
-                                                <?php elseif($pesoBD > 0): ?>
+                                                <?php elseif($conteoNotasBD > 0): ?>
                                                     <span class="badge badge-danger" style="font-size:11px">
                                                         <i class="fas fa-times-circle"></i> Reprobado
                                                     </span>
@@ -154,7 +154,7 @@
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
-                                        <td colspan="<?php echo e(count($tareasDelCurso) + 4); ?>" class="text-center">No hay estudiantes.</td>
+                                        <td colspan="<?php echo e(count($tareasDelCurso) + 2); ?>" class="text-center">No hay estudiantes.</td>
                                     </tr>
                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </tbody>
@@ -182,28 +182,26 @@
             $('#tabla-notas tbody tr').each(function() {
                 let row = $(this);
                 let sumaNotas = 0;
-                let sumaMaximos = 0;
+                let conteoNotas = 0;
 
                 row.find('.input-nota').each(function() {
-                    let nota = parseFloat($(this).val());
-                    let peso = parseFloat($(this).data('peso')) || 0;
-
-                    if (!isNaN(nota) && peso > 0) {
-                        sumaNotas += nota;
-                        sumaMaximos += peso;
+                    let val = $(this).val();
+                    if (val !== '' && !isNaN(val)) {
+                        sumaNotas += parseFloat(val);
+                        conteoNotas++;
                     }
                 });
 
                 let badge = row.find('.nota-final');
                 let estadoSpan = row.find('.estado-final');
 
-                if (sumaMaximos === 0) {
+                if (conteoNotas === 0) {
                     badge.text('—').removeClass('badge-success badge-danger').addClass('badge-secondary');
                     estadoSpan.html('');
                     return;
                 }
 
-                let notaFinal = (sumaNotas / sumaMaximos) * 5;
+                let notaFinal = sumaNotas / conteoNotas;
                 badge.text(notaFinal.toFixed(2));
 
                 if (notaFinal >= 3.0) {

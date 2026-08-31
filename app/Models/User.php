@@ -21,7 +21,7 @@ class User extends Authenticatable // AQUI ESTA DESACTIVADO
     use Notifiable;
     use TwoFactorAuthenticatable;
 
-    protected $fillable = ['name', 'apellido', 'email', 'password'];
+    protected $fillable = ['name', 'lastname', 'email', 'password'];
 
     protected $hidden = ['password', 'remember_token', 'two_factor_recovery_codes', 'two_factor_secret'];
 
@@ -54,6 +54,16 @@ class User extends Authenticatable // AQUI ESTA DESACTIVADO
         return $this->hasOne(Secretaria::class);
     }// Uno a Uno
 
+    /**
+     * Nombre completo (name + lastname). Único lugar donde vive el nombre
+     * y apellido del usuario: Estudiante, Profesor y Secretaria NO
+     * guardan su propia copia, solo la leen de aquí vía accessors.
+     */
+    public function getNombreCompletoAttribute(): string
+    {
+        return trim("{$this->name} {$this->lastname}");
+    }
+
     public function adminlte_image()
     {
         return url($this->profile_photo_url);
@@ -79,14 +89,14 @@ class User extends Authenticatable // AQUI ESTA DESACTIVADO
         return $this->belongsToMany(Curso::class, 'estudiante_curso')
             ->withPivot([
                 'fecha_inscripcion',
-                'horas_realizadas',
+                'estado',
             ])
             ->withTimestamps();
     }
 
     /**
      * Determina si el usuario completó un curso.
-     * Condición: el estado del pivot es 'aprobado' O (nota >= 3.0 Y horas completas).
+     * Condición: el estado del pivot es 'aprobado' O (nota ponderada >= 3.0).
      * El profesor puede marcar como aprobado desde Inscripciones.
      */
     public function hasCompletedCourse(\App\Models\Curso $course): bool
@@ -96,7 +106,7 @@ class User extends Authenticatable // AQUI ESTA DESACTIVADO
 
         $pivot = $estudiante->cursos()
             ->where('cursos.id', $course->id)
-            ->withPivot('horas_realizadas', 'estado')
+            ->withPivot('estado')
             ->first();
 
         if (!$pivot) return false;

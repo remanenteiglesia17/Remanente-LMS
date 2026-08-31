@@ -115,6 +115,23 @@ public function estudiante()
     }
 
     /**
+     * Normaliza el tipo de evaluación para efectos de ponderación.
+     *
+     * `Modulo::pesosPorCategoria()` solo conoce las 5 categorías con las
+     * que se configura un módulo (tarea, quiz, examen, proyecto, foro).
+     * "Parcial" no es una categoría propia: en términos generales un
+     * parcial ES un examen, así que hereda el peso de esa categoría
+     * (peso_examen). Sin este alias, cualquier calificación con
+     * tipo_evaluacion = 'parcial' queda con peso 0 y desaparece del
+     * promedio del módulo (y de paso arrastra el módulo entero a 0 si
+     * era su única calificación).
+     */
+    public static function normalizarTipoParaPeso(?string $tipo): ?string
+    {
+        return $tipo === 'parcial' ? 'examen' : $tipo;
+    }
+
+    /**
      * Aporte de esta calificación a la nota final (0.0 - 5.0), según el
      * sistema de tres niveles (ver promedioPonderadoEstudianteCurso para
      * el detalle completo).
@@ -143,9 +160,10 @@ public function estudiante()
             return 0;
         }
 
-        $pesoCategoria = $pesosCategoria[$this->tipo_evaluacion] ?? 0;
+        $tipoNormalizado = self::normalizarTipoParaPeso($this->tipo_evaluacion);
+        $pesoCategoria = $pesosCategoria[$tipoNormalizado] ?? 0;
         $cantidadMismoTipo = Tarea::where('modulo_id', $modulo->id)
-            ->where('tipo', $this->tipo_evaluacion)
+            ->where('tipo', $tipoNormalizado)
             ->count();
         if ($cantidadMismoTipo <= 0) {
             return 0;
@@ -270,7 +288,9 @@ public function estudiante()
             return 0;
         }
 
-        $porCategoria = $calificacionesModulo->groupBy('tipo_evaluacion');
+        $porCategoria = $calificacionesModulo->groupBy(
+            fn ($calif) => self::normalizarTipoParaPeso($calif->tipo_evaluacion)
+        );
 
         $notaModulo = 0;
 

@@ -226,10 +226,10 @@ $('#profesor_id').on('change', function() {
             'cursor': 'default'
         });
 
-        response.cursos.forEach(function(curso) {
-            var esElYaAsignado = response.tiene_curso && response.curso_asignado && curso.id === response.curso_asignado.id;
-            select.append(`<option value="${curso.id}"${esElYaAsignado ? ' selected' : ''}>${curso.nombre}${esElYaAsignado ? ' (ya tiene horario)' : ''}</option>`);
-        });
+        // response.cursos.forEach(function(curso) {
+        //     var esElYaAsignado = response.tiene_curso && response.curso_asignado && curso.id === response.curso_asignado.id;
+        //     select.append(`<option value="${curso.id}"${esElYaAsignado ? ' selected' : ''}>${curso.nombre}${esElYaAsignado ? ' (ya tiene horario)' : ''}</option>`);
+        // });
 
         if (response.mensaje) {
             console.log(response.mensaje);
@@ -237,8 +237,14 @@ $('#profesor_id').on('change', function() {
 
         // Gracias a que no refrescamos la página, el cursor no saltará el campo IVA
         // si el usuario sigue su flujo normal de tabulación o clic.
-    }).fail(function() {
-        alert('Error al obtener los datos del profesor');
+    }).fail(function(xhr) {
+        // Muestra el mensaje real que manda el backend (si lo hay) para
+        // poder diagnosticar la causa real en vez de un mensaje genérico.
+        var detalle = xhr.responseJSON && xhr.responseJSON.error
+            ? xhr.responseJSON.error
+            : ('HTTP ' + xhr.status + ' — revisa storage/logs/laravel.log');
+        console.error('Error al obtener los datos del profesor:', xhr);
+        alert('Error al obtener los datos del profesor:\n' + detalle);
     });
 });
 </script>

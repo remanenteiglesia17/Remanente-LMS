@@ -126,7 +126,6 @@ class EntregaCalificacionSeeder extends Seeder
                     : 0;
 
                 $totalTareasCurso = $tareas->count();
-                $porcentajeAvance = $totalTareasCurso > 0 ? $tareasCalificadas / $totalTareasCurso : 0;
 
                 // Solo se marca aprobado/reprobado si ya se calificó todo lo que ha vencido
                 // y el curso no tiene tareas pendientes de calificar por el profesor.
@@ -141,7 +140,6 @@ class EntregaCalificacionSeeder extends Seeder
                     ->where('curso_id', $curso->id)
                     ->update([
                         'estado' => $estadoFinal,
-                        'horas_realizadas' => (int) round($curso->horas_requeridas * $porcentajeAvance),
                         'fecha_inscripcion' => $estudiante->pivot->fecha_inscripcion ?? Carbon::now()->subWeeks(6),
                         'updated_at' => now(),
                     ]);

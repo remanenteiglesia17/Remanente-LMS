@@ -219,9 +219,7 @@ return [
             'icon' => 'fas fa-home',
         ],
 
-        /* ============================================================
-        | ADMINISTRACIÓN GENERAL
-        ============================================================ */
+        /* ================= ADMINISTRACIÓN GENERAL ================= */
         ['header' => 'ADMINISTRADOR', 'can' => 'admin.estudiantes.index'],
 
         [
@@ -229,41 +227,6 @@ return [
             'icon' => 'fas fa-fw fa-graduation-cap',
             'route' => 'admin.cursos.index',
             'can' => 'admin.cursos.index',
-        ],
-        ['header' => 'GESTIÓN ACADÉMICA', 'can' => 'profesor.calificaciones.index'],
-        [
-            'text' => 'Calificar', 
-            'icon' => 'fas fa-edit',
-            'route'  => 'admin.profesor.calificaciones.index',
-            'can'  => 'profesor.calificaciones.index', // Permiso para el profesor
-            // 'submenu' => [
-            //     [
-            //         'text' => 'visual Example',
-            //         'icon' => 'far fa-circle fa-xs',
-            //         'route' => 'admin.profesor.calificaciones.visual', // Asegúrate que esta ruta exista en web.php
-            //     ],
-            // ],
-        ],
-        /* ============================================================
-        | ESTUDIANTE
-        ============================================================ */
-        ['header' => 'ESTUDIANTE', 'can' => 'estudiante.cursos.index'],
-        [
-            'text' => 'Curso',
-            'icon' => 'fas fa-book', //'fas fa-book-open'
-            'can' => 'estudiante.cursos.index',
-            'submenu' => [
-                [
-                    'text' => 'Presentacion',
-                    'icon' => 'far fa-circle fa-xs',
-                    'route' => 'admin.mi-curso', // Asegúrate que esta ruta exista en web.php
-                ],
-                [
-                    'text' => 'Módulos',
-                    'icon' => 'fa-solid fa-circle-dot fa-xs text-success',
-                    'route' => 'estudiante.modulos.index',
-                ],
-            ],
         ],
         [
             'text' => 'Horarios',
@@ -294,41 +257,14 @@ return [
             'route' => 'admin.asistencias.index',
             'can' => 'admin.asistencias.index',
         ],
-
-        /* ================= ESTADÍSTICAS / REPORTES ================= */
-        // [
-        //     'text' => 'Reportes Académicos',
-        //     'icon' => 'fas fa-chart-bar',
-        //     'can' => 'admin.reportes.index',
-        //     'submenu' => [
-        //         [
-        //             'text' => 'Cursos',
-        //             'icon' => 'fas fa-chart-line',
-        //             'url' => '#',
-        //             // 'route' => 'admin.reportes.cursos',
-        //             // 'can' => 'admin.reportes.cursos',
-        //         ],
-        //         [
-        //             'text' => 'Estudiantes',
-        //             'icon' => 'fas fa-user-chart',
-        //             'url' => '#',
-        //             // 'route' => 'admin.reportes.estudiantes',
-        //             // 'can' => 'admin.reportes.estudiantes',
-        //         ],
-        //         [
-        //             'text' => 'Asistencias',
-        //             'icon' => 'fas fa-calendar-check',
-        //             'url' => '#',
-        //             // 'route' => 'admin.asistencias.estadisticas',
-        //             // 'can' => 'admin.asistencias.estadisticas',
-        //         ],
-        //     ],
-        // ],
-
-        /* ============================================================
-        | PROFESOR
-        ============================================================ */
+        /* ================= GESTION ACADÉMICA / PROFESOR ================= */ 
         ['header' => 'PROFESOR', 'can' => 'admin.profesor.tareas.index'],
+        [
+            'text' => 'Calificar',
+            'icon' => 'fas fa-edit',
+            'route'  => 'admin.profesor.calificaciones.index',
+            'can'  => 'profesor.calificaciones.index', 
+        ],
         [
             'text' => 'Tareas',
             'icon' => 'fas fa-tasks', //     'icon' => 'fas fa-book-reader',
@@ -342,75 +278,36 @@ return [
             'can' => 'admin.profesor.modulos.index',
         ],
 
-        // [
-        //     'text' => 'Reportes',
-        //     'icon' => 'fas fa-chart-pie',
-        //     'can' => 'profesor.reportes.cursos',
-        //     'submenu' => [
-        //         [
-        //             'text' => 'Asistencias',
-        //             'icon' => 'fas fa-clipboard-list',
-        //             'url' => '#',
-        //             // 'route' => 'profesor.reportes.asistencias',
-        //         ],
-        //         [
-        //             'text' => 'Tareas',
-        //             'icon' => 'fas fa-file-alt',
-        //             'url' => '#',
-        //             // 'route' => 'profesor.reportes.tareas',
-        //         ],
-        //     ],
-        // ],
-
-
-
+        /* ================= ESTUDIANTE ================= */
+        ['header' => 'ESTUDIANTE', 'can' => 'estudiante.menu-cursos'],
         [
-            'text' => 'Tareas',
-            'icon' => 'fas fa-tasks',
-            'url' => '#',
-            'route' => 'estudiante.tareas.index',
-            'can' => 'estudiante.tareas.index',
+            'text' => 'Curso',
+            'icon' => 'fas fa-book', //'fas fa-book-open'
+            'can' => 'estudiante.menu-cursos',
+            'submenu' => [
+                [
+                    'text' => 'Presentacion',
+                    'icon' => 'far fa-circle fa-xs',
+                    'route' => 'admin.mi-curso', // Asegúrate que esta ruta exista en web.php
+                ],
+                [
+                    'text' => 'Módulos',
+                    'icon' => 'fa-solid fa-circle-dot fa-xs text-success',
+                    'route' => 'estudiante.modulos.index',
+                ],
+            ],
         ],
-
-        // [
-        //     'text' => 'Estadísticas',
-        //     'icon' => 'fas fa-chart-line',
-        //     'can' => 'estudiante.estadisticas.index',
-        //     'submenu' => [
-        // [
-        //     'text' => 'Asistencias',
-        //     'icon' => 'fas fa-calendar-check',
-        //     'url' => '#',
-        //     // 'route' => 'estudiante.estadisticas.asistencias',
-        // ],
-        // [
-        //     'text' => 'Cursos',
-        //     'icon' => 'fas fa-graduation-cap',
-        //     'url' => '#',
-        //     // 'route' => 'estudiante.estadisticas.cursos',
-        // ],
         [
             'text' => 'Mis Calificaciones',
             'route' => 'estudiante.calificaciones.index',
             'icon' => 'fas fa-star',
-            'can' => 'estudiante.calificaciones.index',
+            'can' => 'estudiante.menu-cursos',
         ],
-        // [
-        //     'text' => 'Resultados',
-        //     'route' => 'admin.cursos.completados',
-        //     'icon' => 'fas fa-chart-bar',
-        // ],
-        // ],
-        // ],
-
-        /* ============================================================
-        | CONFIGURACIÓN (SOLO SUPERADMIN)
-        ============================================================ */
+        /* ================= CONFIGURACIÓN ================= */
         ['header' => 'CONFIGURACIÓN', 'can' => 'admin.config.index'],
-
         [
             'text' => 'Sistema',
-            'icon' => 'fas fa-cogs', 
+            'icon' => 'fas fa-cogs',
             'submenu' => [
                 [
                     'text' => 'Usuarios',
@@ -444,12 +341,62 @@ return [
             'route' => 'admin.config.index',
             'can' => 'admin.config.create',
         ],
-        //               [
-        //     'text' => 'attempt',
-        //     'icon' => 'fas fa-sliders-h', 
+
+        /* ================= ESTADÍSTICAS / REPORTES ================= */
+        // [
+        //     'text' => 'Reportes Académicos',
+        //     'icon' => 'fas fa-chart-bar',
+        //     'can' => 'admin.reportes.index',
+        //     'submenu' => [
+        //         [
+        //             'text' => 'Cursos',
+        //             'icon' => 'fas fa-chart-line',
+        //             'url' => '#',
+        //             // 'route' => 'admin.reportes.cursos',
+        //             // 'can' => 'admin.reportes.cursos',
+        //         ],
+        //         [
+        //             'text' => 'Estudiantes',
+        //             'icon' => 'fas fa-user-chart',
+        //             'url' => '#',
+        //             // 'route' => 'admin.reportes.estudiantes',
+        //             // 'can' => 'admin.reportes.estudiantes',
+        //         ],
+        //         [
+        //             'text' => 'Asistencias',
+        //             'icon' => 'fas fa-calendar-check',
+        //             'url' => '#',
+        //             // 'route' => 'admin.asistencias.estadisticas',
+        //             // 'can' => 'admin.asistencias.estadisticas',
+        //         ],
+        //     ],
         // ],
-        // ['text'=> 'Clase','route' => 'admin.users.index','icon' => 'fas fa-envelope',],
-        // ['text' => 'information','icon_color' => 'cyan','url' => '#', ],
+
+
+        // [
+        //     'text' => 'Estadísticas',
+        //     'icon' => 'fas fa-chart-line',
+        //     'can' => 'estudiante.estadisticas.index',
+        //     'submenu' => [
+        // [
+        //     'text' => 'Asistencias',
+        //     'icon' => 'fas fa-calendar-check',
+        //     'url' => '#',
+        //     // 'route' => 'estudiante.estadisticas.asistencias',
+        // ],
+        // [
+        //     'text' => 'Cursos',
+        //     'icon' => 'fas fa-graduation-cap',
+        //     'url' => '#',
+        //     // 'route' => 'estudiante.estadisticas.cursos',
+        // ],
+        // [
+        //     'text' => 'Resultados',
+        //     'route' => 'admin.cursos.completados',
+        //     'icon' => 'fas fa-chart-bar',
+        // ],
+        // ],
+        // ],
     ],
 
     /*

@@ -18,8 +18,8 @@ class ProfesorFactory extends Factory
     public function definition(): array
     {
         return [
-            'nombres' => $this->faker->firstName(),
-            'apellidos' => $this->faker->lastName(),
+            // nombres/apellidos ya no viven en 'profesors': los genera
+            // UserFactory (name/lastname) para el usuario relacionado.
             'telefono' => $this->faker->phoneNumber(),
             // 'especialidad' => $this->faker->word(),
             // Asegúrate de que 'user_id' sea opcional o se genere correctamente

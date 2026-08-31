@@ -314,8 +314,7 @@ class CalificacionController extends Controller
 
         foreach ($inscripciones as $inscripcion) {
             $promedio = Calificacion::promedioPonderadoEstudianteCurso($inscripcion->estudiante_id, $curso->id);
-            $horasOk = $inscripcion->horas_realizadas >= $curso->horas_requeridas;
-            $aprobo = $promedio >= 3.0 && $horasOk;
+            $aprobo = $promedio >= 3.0;
 
             DB::table('estudiante_curso')
                 ->where('id', $inscripcion->id)
@@ -330,7 +329,7 @@ class CalificacionController extends Controller
         return back()->with([
             'swal' => 2,
             'title' => 'Curso finalizado',
-            'info'  => "Se evaluaron {$inscripciones->count()} estudiantes: {$aprobados} aprobados, {$reprobados} reprobados (según su promedio y horas cumplidas).",
+            'info'  => "Se evaluaron {$inscripciones->count()} estudiantes: {$aprobados} aprobados, {$reprobados} reprobados (según su promedio ponderado).",
             'icon'  => 'success',
         ]);
     }

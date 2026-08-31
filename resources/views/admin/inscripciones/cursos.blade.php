@@ -25,7 +25,6 @@
                         <th>Código</th>
                         <th>Periodo</th>
                         <th>Fecha de inscripción</th>
-                        <th>Horas realizadas</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
@@ -41,21 +40,6 @@
                                     ? \Carbon\Carbon::parse($curso->pivot->fecha_inscripcion)->format('d/m/Y') 
                                     : '-' }}
                             </td>
-                                <td class="text-center">
-                                    <div class="progress" style="height: 20px;">
-                                        @php
-                                            $porcentaje = $curso->horas_requeridas > 0 
-                                                ? round(($curso->pivot->horas_realizadas / $curso->horas_requeridas) * 100, 2)
-                                                : 0;
-                                            $clase = $porcentaje >= 100 ? 'bg-success' : ($porcentaje >= 50 ? 'bg-info' : 'bg-warning');
-                                        @endphp
-                                        <div class="progress-bar {{ $clase }}" role="progressbar" 
-                                             style="width: {{ min($porcentaje, 100) }}%">
-                                            {{ $curso->pivot->horas_realizadas ?? 0 }}h / {{ $curso->horas_requeridas }}h
-                                        </div>
-                                    </div>
-                                    <small class="text-muted">{{ $porcentaje }}%</small>
-                                </td>
 <td class="text-center">
                                     @if(isset($curso->pivot->estado))
                                         @switch($curso->pivot->estado)

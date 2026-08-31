@@ -82,7 +82,7 @@ class HomeController extends Controller
         $user = Auth::user();
 
         if ($user->hasAnyRole(['superAdmin', 'admin', 'secretaria'])) {
-            $clases = Clase::with(['profesor', 'curso', 'estudiantes.user'])->orderByDesc('fecha_hora_inicio')->get();
+            $clases = Clase::with(['profesor.user', 'curso', 'estudiantes.user'])->orderByDesc('fecha_hora_inicio')->get();
         } elseif ($user->hasRole('estudiante')) {
             if (!$user->estudiante) {
                 abort(403, 'El usuario no tiene perfil de estudiante.');
@@ -91,7 +91,7 @@ class HomeController extends Controller
             $clases = Clase::whereHas('estudiantes', function ($q) use ($user) {
                 $q->where('estudiante_id', $user->estudiante->id);
             })
-            ->with(['profesor', 'curso', 'estudiantes.user'])
+            ->with(['profesor.user', 'curso', 'estudiantes.user'])
             ->orderByDesc('fecha_hora_inicio')
             ->get();
         } else {
@@ -99,8 +99,18 @@ class HomeController extends Controller
         }
 
         $cursos = Curso::select('id', 'nombre')->orderBy('nombre')->get();
-        $profesores = Profesor::select('id', 'nombres', 'apellidos')->orderBy('nombres')->get();
-        $estudiantesDisponibles = Estudiante::select('id', 'nombres', 'apellidos')->orderBy('nombres')->get();
+        // nombres/apellidos ya no son columnas de 'profesors'/'estudiantes';
+        // se ordena vía join con 'users' y se leen por accessor (with('user')).
+        $profesores = Profesor::join('users', 'users.id', '=', 'profesors.user_id')
+            ->orderBy('users.name')
+            ->select('profesors.*')
+            ->with('user')
+            ->get();
+        $estudiantesDisponibles = Estudiante::join('users', 'users.id', '=', 'estudiantes.user_id')
+            ->orderBy('users.name')
+            ->select('estudiantes.*')
+            ->with('user')
+            ->get();
 
         return view('admin.home.show', compact('clases', 'cursos', 'profesores', 'estudiantesDisponibles'));
     }
@@ -115,7 +125,7 @@ class HomeController extends Controller
             $desde = now()->subMonth()->startOfDay();
             $hasta = now()->addMonths(3)->endOfDay();
 
-            $query = Clase::with(['profesor', 'curso', 'estudiantes.user'])
+            $query = Clase::with(['profesor.user', 'curso', 'estudiantes.user'])
                 ->whereBetween('fecha_hora_inicio', [$desde, $hasta]);
 
             // 1️⃣ Roles administrativos → ven todo
@@ -215,25 +225,50 @@ class HomeController extends Controller
         ];
     }
 
-    private function handleStaffDashboard()
+    /**
+     * Devuelve, para cada profesor (según el filtro opcional), sus datos
+     * básicos junto con los nombres de los cursos que dicta, concatenados
+     * en un solo string. Se arma en PHP en vez de con GROUP_CONCAT() de
+     * SQL: esa función (con DISTINCT + ORDER BY + SEPARATOR) es sintaxis
+     * de MySQL y no funciona igual en SQLite/Postgres (motor por defecto
+     * en Laravel 11), lo que rompía esta consulta.
+     */
+    private function profesoresConCursosAgrupados(?\Closure $filtro = null)
     {
-        $cursosDisponibles = Curso::all();
-        $profesorSelect = DB::table('profesors')
+        $query = DB::table('profesors')
+            ->join('users as profesor_users', 'profesor_users.id', '=', 'profesors.user_id') // nombres/apellidos del profesor ahora viven en 'users' (alias distinto: 'users' ya se usa abajo para el estudiante)
             ->join('horario_profesor_curso', 'horario_profesor_curso.profesor_id', '=', 'profesors.id')
             ->join('horarios', 'horario_profesor_curso.horario_id', '=', 'horarios.id')
             ->join('cursos', 'horario_profesor_curso.curso_id', '=', 'cursos.id') // Usamos la tabla intermedia
             ->join('estudiante_curso', 'cursos.id', '=', 'estudiante_curso.curso_id')
             ->join('estudiantes', 'estudiante_curso.estudiante_id', '=', 'estudiantes.id')
             ->join('users', 'estudiantes.user_id', '=', 'users.id')
-            ->select(
-                'profesors.id',
-                'profesors.nombres',
-                'profesors.apellidos',
-                DB::raw('GROUP_CONCAT(DISTINCT cursos.nombre ORDER BY cursos.nombre SEPARATOR ", ") as cursos')
-            )
-            ->groupBy('profesors.id', 'profesors.nombres', 'profesors.apellidos')
-            ->limit(100)
-            ->get();
+            ->select('profesors.id', 'profesor_users.name as nombres', 'profesor_users.lastname as apellidos', 'cursos.nombre as curso_nombre');
+
+        if ($filtro) {
+            $filtro($query);
+        }
+
+        return $query->get()
+            ->groupBy('id')
+            ->map(function ($filas) {
+                $primera = $filas->first();
+
+                return (object) [
+                    'id' => $primera->id,
+                    'nombres' => $primera->nombres,
+                    'apellidos' => $primera->apellidos,
+                    'cursos' => $filas->pluck('curso_nombre')->unique()->sort()->implode(', '),
+                ];
+            })
+            ->take(100)
+            ->values();
+    }
+
+    private function handleStaffDashboard()
+    {
+        $cursosDisponibles = Curso::all();
+        $profesorSelect = $this->profesoresConCursosAgrupados();
 
         return [
             'profesorSelect' => $profesorSelect,
@@ -286,34 +321,19 @@ class HomeController extends Controller
 
     private function handleClientRole($estudianteId)
     {
-        $profesorSelect = DB::table('profesors')
-            ->join('horario_profesor_curso', 'horario_profesor_curso.profesor_id', '=', 'profesors.id')
-            ->join('horarios', 'horario_profesor_curso.horario_id', '=', 'horarios.id')
-            ->join('cursos', 'horario_profesor_curso.curso_id', '=', 'cursos.id') // Usamos la tabla intermedia
-            ->join('estudiante_curso', 'cursos.id', '=', 'estudiante_curso.curso_id')
-            ->join('estudiantes', 'estudiante_curso.estudiante_id', '=', 'estudiantes.id')
-            ->join('users', 'estudiantes.user_id', '=', 'users.id')
-            ->where('users.id', Auth::id())
-            ->select(
-                'profesors.id',
-                'profesors.nombres',
-                'profesors.apellidos',
-                DB::raw('GROUP_CONCAT(DISTINCT cursos.nombre ORDER BY cursos.nombre SEPARATOR ", ") as cursos')
-            )
-            ->groupBy('profesors.id', 'profesors.nombres', 'profesors.apellidos')
-            ->limit(100)
-            ->get();
+        $profesorSelect = $this->profesoresConCursosAgrupados(function ($q) {
+            $q->where('users.id', Auth::id());
+        });
 
         $total_cursos = DB::table('estudiante_curso')
-            ->join('cursos', 'estudiante_curso.curso_id', '=', 'cursos.id')
-            ->where('estudiante_curso.estudiante_id', $estudianteId)
-            ->whereColumn('estudiante_curso.horas_realizadas', '>=', 'cursos.horas_requeridas')
+            ->where('estudiante_id', $estudianteId)
+            ->where('estado', 'aprobado')
             ->count();
 
         if ($estudianteId) {
-            $cursosDisponibles = Curso::whereHas('estudiantes', function ($q) use ($estudianteId) {    // Obtenemos cursos del estudiante que aún no están completados
+            $cursosDisponibles = Curso::whereHas('estudiantes', function ($q) use ($estudianteId) {    // Obtenemos cursos del estudiante que aún no están aprobados
                 $q->where('estudiante_id', $estudianteId)
-                    ->whereColumn('estudiante_curso.horas_realizadas', '<', 'cursos.horas_requeridas');
+                    ->where('estudiante_curso.estado', '!=', 'aprobado');
             })->get();
         } else {
             $cursosDisponibles = Curso::all();

@@ -1,7 +1,29 @@
+Busca "Git Bash" en el menú inicio (viene con Git for Windows, que casi seguro ya tienes si usas Git). Ábrelo, navega a tu proyecto y corre:
+
+bash
+cd /c/xampp/htdocs/www/Remanente-LMS-Re
+chmod +x installer.bash
+./installer.bash .
+./installer.bash CtrlViewModelDb
+
+./installer.bash /ruta/a/ControlViewModelDb
+----------------------------------------------------------------------
+grep -ril "horas_requeridas\|horas_realizadas" app database resources
+
+
+
 php artisan optimize:clear
 php artisan cache:clear
 php artisan view:clear
-php artisan log:clear
+
+### consultar bd por cmd
+C:\xampp\mysql\bin\mysql -u root
+USE canvas;
+SELECT * FROM estudiantes
+
+
+
+
 
 ## Auditoría de código muerto en Laravel
 * Sí (es un paquete diseñado exclusivamente para la estructura Laravel).

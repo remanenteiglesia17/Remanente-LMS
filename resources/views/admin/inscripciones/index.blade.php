@@ -82,7 +82,6 @@
                             <th>Cédula</th>
                             <th>Curso</th>
                             <th>Período</th>
-                            <th>Horas</th>
                             <th>Estado</th>
                             <th>Fecha Inscripción</th>
                             <th width="150" class="text-center">Acciones</th>
@@ -104,7 +103,6 @@
                                     <small class="text-muted">{{ $inscripcion->codigo }}</small>
                                 </td>
                                 <td>{{ $inscripcion->periodo }}</td>
-                                <td>{{ $inscripcion->horas_realizadas }}h</td>
 
                                 <td>
                                     @switch($inscripcion->estado)

@@ -9,8 +9,7 @@ return new class extends Migration {
     {
         Schema::create('estudiantes', function (Blueprint $table) {
             $table->id(); // JD
-            $table->string('nombres', 100);
-            $table->string('apellidos', 100);
+            // nombres/apellidos viven en 'users' (no se duplican aquí)
             $table->string('cc', 20)->unique();
             $table->string('genero', 10);
             $table->string('telefono', 20);

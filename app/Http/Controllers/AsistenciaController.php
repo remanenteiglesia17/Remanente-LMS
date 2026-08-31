@@ -73,11 +73,6 @@ class AsistenciaController extends Controller
         ]);
 
         $clase = Clase::with('curso')->findOrFail($request->clase_id);
-        
-        // Calcular duración de la clase en horas
-        $inicio = Carbon::parse($clase->fecha_hora_inicio);
-        $fin = Carbon::parse($clase->fecha_hora_fin);
-        $duracionHoras = $fin->diffInHours($inicio, true); // true para decimales
 
         DB::beginTransaction();
         
@@ -98,13 +93,8 @@ class AsistenciaController extends Controller
                     ]
                 );
 
-                // Actualizar horas realizadas en estudiante_curso
-                $this->actualizarHorasRealizadas(
-                    $estudianteId, 
-                    $clase->curso_id, 
-                    $duracionHoras, 
-                    $estado
-                );
+                // Asegurar que exista la inscripción en estudiante_curso
+                $this->asegurarInscripcion($estudianteId, $clase->curso_id);
 
                 // Reprobar automáticamente si acumula 3 inasistencias injustificadas
                 $this->verificarInasistenciasYReprobar($estudianteId, $clase->curso_id);
@@ -137,8 +127,7 @@ class AsistenciaController extends Controller
     {
         $query = Estudiante::select(
                 'estudiantes.id',
-                'estudiantes.nombres',
-                'estudiantes.apellidos',
+                'estudiantes.user_id',
                 'asistencias.id AS asistencia_id',
                 'clases.titulo AS nombre_clase',
                 'clases.fecha_hora_inicio',
@@ -146,6 +135,7 @@ class AsistenciaController extends Controller
                 'asistencias.estado',
                 'cursos.nombre AS nombre_curso'
             )
+            ->with('user') // nombres/apellidos ya no son columnas de 'estudiantes'; se resuelven vía accessor desde 'user'
             ->join('asistencias', 'estudiantes.id', '=', 'asistencias.estudiante_id')
             ->join('clases', 'asistencias.clase_id', '=', 'clases.id')
             ->join('cursos', 'clases.curso_id', '=', 'cursos.id')
@@ -245,35 +235,25 @@ class AsistenciaController extends Controller
     }
 
     /**
-     * Actualizar horas realizadas del estudiante en el curso
+     * Asegurar que exista la inscripción del estudiante en el curso
+     * (se crea automáticamente al registrar su primera asistencia).
      */
-    private function actualizarHorasRealizadas($estudianteId, $cursoId, $horas, $estado)
+    private function asegurarInscripcion($estudianteId, $cursoId)
     {
-        // Verificar si el estudiante está inscrito en el curso
         $inscripcion = DB::table('estudiante_curso')
             ->where('estudiante_id', $estudianteId)
             ->where('curso_id', $cursoId)
             ->first();
 
         if (!$inscripcion) {
-            // Crear inscripción si no existe
             DB::table('estudiante_curso')->insert([
                 'estudiante_id' => $estudianteId,
                 'curso_id' => $cursoId,
-                'horas_realizadas' => 0,
                 'estado' => 'activo',
                 'fecha_inscripcion' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-        }
-
-        // Solo sumar horas si asistió (presente o tardanza)
-        if (in_array($estado, ['presente', 'tardanza'])) {
-            DB::table('estudiante_curso')
-                ->where('estudiante_id', $estudianteId)
-                ->where('curso_id', $cursoId)
-                ->increment('horas_realizadas', $horas);
         }
     }
 

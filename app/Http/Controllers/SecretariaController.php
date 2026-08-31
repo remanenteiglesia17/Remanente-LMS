@@ -39,15 +39,13 @@ class SecretariaController extends Controller
 
             $usuario = User::create([
                 'name' => $request->nombres,
-                'apellido' => $request->apellidos,
+                'lastname' => $request->apellidos,
                 'email' => $request->correo,
                 'password' => Hash::make($request->password ?? $request->cc),
             ]);
 
             $secretaria = new Secretaria();
             $secretaria->user_id = $usuario->id;
-            $secretaria->nombres = $request->nombres;
-            $secretaria->apellidos = $request->apellidos;
             $secretaria->cc = $request->cc;
             $secretaria->telefono = $request->telefono;
             $secretaria->direccion = $request->direccion;
@@ -85,8 +83,6 @@ class SecretariaController extends Controller
             'password' => 'nullable|max:20|confirmed',
         ]);
 
-        $secretaria->nombres = $request->nombres;
-        $secretaria->apellidos = $request->apellidos;
         $secretaria->cc = $request->cc;
         $secretaria->telefono = $request->telefono;
         $secretaria->direccion = $request->direccion;
@@ -96,6 +92,7 @@ class SecretariaController extends Controller
         // $usuario = new User::find($secretaria->user->id);
         $usuario = $secretaria->user;  // Obtén el usuario existente
         $usuario->name = $request->nombres;
+        $usuario->lastname = $request->apellidos;
         $usuario->email = $request->email;
         if ($request->filled('password')) {$usuario->password = Hash::make($request->password);}
         $usuario->save();
