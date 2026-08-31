@@ -15,6 +15,7 @@ grep -ril "horas_requeridas\|horas_realizadas" app database resources
 php artisan optimize:clear
 php artisan cache:clear
 php artisan view:clear
+php artisan route:list --name=asistencias
 
 ### consultar bd por cmd
 C:\xampp\mysql\bin\mysql -u root

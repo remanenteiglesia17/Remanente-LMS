@@ -39,9 +39,9 @@ class CursoController extends Controller
 
     public function store(Request $request)
     {
+        // 1. Validar inputs (ya no solicitamos 'codigo' como requerido)
         $validator = Validator::make($request->all(), [
-            'codigo' => 'required|unique:cursos',
-            'nombre' => 'required',
+            'nombre' => 'required|string|max:255',
             'periodo' => 'required|string',
             'estado' => 'required|in:0,1',
             'descripcion' => 'required|string',
@@ -55,17 +55,30 @@ class CursoController extends Controller
                 ->withInput()
                 ->with('openModal', 'createCursoModal');
         }
-        Curso::create($request->all()); // Crear un nuevo curso
 
-        return redirect()->route('admin.cursos.index')->with(['toast' => 2, 'title' => 'Exito', 'info' => 'Curso registrado correctamente.', 'icon' => 'success']);
+        // 2. Generar código autoincremental de formato CUR-0001
+        $ultimoCurso = Curso::latest('id')->first();
+        $siguienteId = $ultimoCurso ? $ultimoCurso->id + 1 : 1;
+        $codigoGenerado = 'CUR-' . str_pad($siguienteId, 4, '0', STR_PAD_LEFT);
+
+        // 3. Crear el registro unificando los datos del request con el código autogenerado
+        Curso::create(array_merge($request->all(), [
+            'codigo' => $codigoGenerado,
+        ]));
+
+        return redirect()->route('admin.cursos.index')->with([
+            'toast' => 2,
+            'title' => 'Éxito',
+            'info' => 'Curso registrado correctamente con código: ' . $codigoGenerado,
+            'icon' => 'success'
+        ]);
     }
 
     public function show(Curso $curso)
     {
         $user = Auth::user();
-        if($user->estudiante){
-           $curso = auth()->user()->estudiante->cursos()->first();
-
+        if ($user->estudiante) {
+            $curso = auth()->user()->estudiante->cursos()->first();
         }
         // Cargar todas las relaciones necesarias
         $curso->load([
@@ -237,8 +250,8 @@ class CursoController extends Controller
             ->orderBy('estudiantes.id')
             ->get();
 
-        $cursosCompletados = $cursosEstudiantes->filter(fn ($c) => $c->estado === 'aprobado');
-        $cursosEnProgreso = $cursosEstudiantes->filter(fn ($c) => $c->estado === 'activo');
+        $cursosCompletados = $cursosEstudiantes->filter(fn($c) => $c->estado === 'aprobado');
+        $cursosEnProgreso = $cursosEstudiantes->filter(fn($c) => $c->estado === 'activo');
 
         return view('admin.cursos.estadisticas', compact('cursosEstudiantes', 'cursosCompletados', 'cursosEnProgreso'));
     }

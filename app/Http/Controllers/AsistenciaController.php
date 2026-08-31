@@ -10,58 +10,82 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class AsistenciaController extends Controller
 {
     public function __construct()
     {
-        // Middleware de permisos
         $this->middleware('can:admin.asistencias.index')->only('index');
         $this->middleware('can:admin.asistencias.store')->only('store');
-        $this->middleware('can:admin.asistencias.inasistencias')->only('show');
+        $this->middleware('can:admin.asistencias.inasistencias')->only('excusar');
     }
 
     /**
-     * Mostrar formulario de registro de asistencias
+     * Panel Principal de Asistencias (Pase de Lista + Reporte de Inasistencias)
      */
     public function index()
     {
         $hoy = Carbon::now()->format('Y-m-d');
+        $esAdmin = Auth::user()->hasRole(['admin', 'superAdmin']);
 
-        // Obtener clases según el rol del usuario
-        if (Auth::user()->hasRole(['admin', 'superAdmin'])) {
-            // Admin ve todas las clases
-            $clases = Clase::with(['curso', 'profesor.user', 'estudiantes'])
-                ->whereDate('fecha_hora_inicio', '>=', now())
-                ->orderBy('fecha_hora_inicio', 'asc')
-                ->get();
-        } else {
-            // Profesor solo ve sus clases
-            $clases = Clase::with(['curso', 'profesor.user', 'estudiantes'])
-                ->whereDate('fecha_hora_inicio', '>=', now())
-                ->whereHas('profesor', function($query) {
-                    $query->where('user_id', Auth::id());
-                })
-                ->orderBy('fecha_hora_inicio', 'asc')
-                ->get();
+        // 1. Obtener Clases (Para Pestaña 'Tomar Asistencia')
+        $queryClases = Clase::with(['curso', 'profesor.user', 'estudiantes'])
+            ->whereDate('fecha_hora_inicio', '>=', now())
+            ->orderBy('fecha_hora_inicio', 'asc');
+
+        if (!$esAdmin) {
+            $queryClases->whereHas('profesor', function ($q) {
+                $q->where('user_id', Auth::id());
+            });
         }
+        $clases = $queryClases->get();
 
-        // Obtener asistencias ya registradas (indexadas por clase_id-estudiante_id)
+        // 2. Asistencias del día indexadas
         $asistencias = Asistencia::with('clase', 'estudiante')
-            ->whereHas('clase', function($query) use ($hoy) {
+            ->whereHas('clase', function ($query) use ($hoy) {
                 $query->whereDate('fecha_hora_inicio', $hoy);
             })
             ->get()
-            ->keyBy(function($item) {
-                return $item->clase_id . '-' . $item->estudiante_id;
-            });
+            ->keyBy(fn($item) => $item->clase_id . '-' . $item->estudiante_id);
 
-        return view('admin.asistencias.index', compact('clases', 'asistencias'));
+        // 3. Reporte de Inasistencias (Para Pestaña 'Reporte de Inasistencias')
+        $queryInasistencias = Estudiante::select(
+                'estudiantes.id',
+                'estudiantes.user_id',
+                'asistencias.id AS asistencia_id',
+                'clases.titulo AS nombre_clase',
+                'clases.fecha_hora_inicio',
+                'clases.fecha_hora_fin',
+                'asistencias.estado',
+                'cursos.nombre AS nombre_curso'
+            )
+            ->with('user')
+            ->join('asistencias', 'estudiantes.id', '=', 'asistencias.estudiante_id')
+            ->join('clases', 'asistencias.clase_id', '=', 'clases.id')
+            ->join('cursos', 'clases.curso_id', '=', 'cursos.id')
+            ->where('asistencias.estado', 'ausente');
+
+        if (!$esAdmin) {
+            $queryInasistencias->whereHas('clases.profesor', function ($q) {
+                $q->where('user_id', Auth::id());
+            });
+        }
+
+        $inasistencias = $queryInasistencias->orderBy('clases.fecha_hora_inicio', 'desc')->get();
+
+        // Cálculo de horas para las inasistencias
+        foreach ($inasistencias as $item) {
+            $inicio = new \DateTime($item->fecha_hora_inicio);
+            $fin = new \DateTime($item->fecha_hora_fin);
+            $diff = $inicio->diff($fin);
+            $item->cant_horas = round($diff->h + ($diff->i / 60), 2);
+        }
+
+        return view('admin.asistencias.index', compact('clases', 'asistencias', 'inasistencias'));
     }
 
     /**
-     * Registrar asistencias de una clase
+     * Registrar asistencias masivas de una clase
      */
     public function store(Request $request)
     {
@@ -75,14 +99,12 @@ class AsistenciaController extends Controller
         $clase = Clase::with('curso')->findOrFail($request->clase_id);
 
         DB::beginTransaction();
-        
         try {
             foreach ($request->asistencias as $asistenciaData) {
                 $estudianteId = $asistenciaData['estudiante_id'];
                 $estado = $asistenciaData['estado'];
 
-                // Crear o actualizar asistencia
-                $asistencia = Asistencia::updateOrCreate(
+                Asistencia::updateOrCreate(
                     [
                         'clase_id' => $clase->id,
                         'estudiante_id' => $estudianteId,
@@ -93,72 +115,24 @@ class AsistenciaController extends Controller
                     ]
                 );
 
-                // Asegurar que exista la inscripción en estudiante_curso
                 $this->asegurarInscripcion($estudianteId, $clase->curso_id);
-
-                // Reprobar automáticamente si acumula 3 inasistencias injustificadas
                 $this->verificarInasistenciasYReprobar($estudianteId, $clase->curso_id);
             }
 
-            // Marcar clase como dictada
             $clase->update(['estado' => 'dictada']);
-
             DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Asistencias registradas correctamente'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Error al registrar asistencias: ' . $e->getMessage()
             ], 500);
         }
-    }
-
-    /**
-     * Mostrar estudiantes con inasistencias
-     */
-    public function show()
-    {
-        $query = Estudiante::select(
-                'estudiantes.id',
-                'estudiantes.user_id',
-                'asistencias.id AS asistencia_id',
-                'clases.titulo AS nombre_clase',
-                'clases.fecha_hora_inicio',
-                'clases.fecha_hora_fin',
-                'asistencias.estado',
-                'cursos.nombre AS nombre_curso'
-            )
-            ->with('user') // nombres/apellidos ya no son columnas de 'estudiantes'; se resuelven vía accessor desde 'user'
-            ->join('asistencias', 'estudiantes.id', '=', 'asistencias.estudiante_id')
-            ->join('clases', 'asistencias.clase_id', '=', 'clases.id')
-            ->join('cursos', 'clases.curso_id', '=', 'cursos.id')
-            ->where('asistencias.estado', 'ausente');
-
-        // Si no es admin, filtrar por profesor
-        if (!Auth::user()->hasRole(['admin', 'superAdmin'])) {
-            $query->whereHas('clases.profesor', function($q) {
-                $q->where('user_id', Auth::id());
-            });
-        }
-
-        $estudiantes = $query->orderBy('clases.fecha_hora_inicio', 'desc')->get();
-
-        // Calcular horas de cada inasistencia
-        foreach ($estudiantes as $estudiante) {
-            $inicio = new \DateTime($estudiante->fecha_hora_inicio);
-            $fin = new \DateTime($estudiante->fecha_hora_fin);
-            $diff = $inicio->diff($fin);
-            $estudiante->cant_horas = round($diff->h + ($diff->i / 60), 2);
-        }
-
-        return view('admin.asistencias.inasistencias', compact('estudiantes'));
     }
 
     /**
@@ -177,8 +151,6 @@ class AsistenciaController extends Controller
             'observaciones' => $request->observaciones,
         ]);
 
-        // Al excusar, recalculamos: si ya no llega a 3 inasistencias injustificadas
-        // y el curso había sido reprobado únicamente por esta causa, se revierte.
         if ($asistencia->clase) {
             $this->verificarInasistenciasYReprobar($asistencia->estudiante_id, $asistencia->clase->curso_id);
         }
@@ -186,25 +158,13 @@ class AsistenciaController extends Controller
         return redirect()->back()->with('success', 'Inasistencia excusada correctamente');
     }
 
-    /**
-     * Número de inasistencias injustificadas ('ausente') que hacen reprobar
-     * automáticamente el curso.
-     */
     private const LIMITE_INASISTENCIAS_INJUSTIFICADAS = 3;
 
-    /**
-     * Revisa las inasistencias injustificadas del estudiante en un curso y,
-     * si alcanza el límite, marca la inscripción como reprobada. Si el
-     * estudiante ya no alcanza el límite (por ejemplo tras excusar una
-     * inasistencia) y el estado actual es 'reprobado', lo regresa a 'activo'.
-     */
     private function verificarInasistenciasYReprobar($estudianteId, $cursoId)
     {
         $inasistenciasInjustificadas = Asistencia::where('estudiante_id', $estudianteId)
             ->where('estado', 'ausente')
-            ->whereHas('clase', function ($query) use ($cursoId) {
-                $query->where('curso_id', $cursoId);
-            })
+            ->whereHas('clase', fn($query) => $query->where('curso_id', $cursoId))
             ->count();
 
         $inscripcion = DB::table('estudiante_curso')
@@ -212,9 +172,7 @@ class AsistenciaController extends Controller
             ->where('curso_id', $cursoId)
             ->first();
 
-        if (!$inscripcion) {
-            return;
-        }
+        if (!$inscripcion) return;
 
         if ($inasistenciasInjustificadas >= self::LIMITE_INASISTENCIAS_INJUSTIFICADAS) {
             if ($inscripcion->estado !== 'reprobado') {
@@ -224,9 +182,6 @@ class AsistenciaController extends Controller
                     ->update(['estado' => 'reprobado']);
             }
         } elseif ($inscripcion->estado === 'reprobado') {
-            // Solo revertimos si estaba reprobado por inasistencias; si ya no
-            // alcanza el límite, regresa a 'activo' para que el profesor
-            // pueda seguir calificándolo normalmente.
             DB::table('estudiante_curso')
                 ->where('estudiante_id', $estudianteId)
                 ->where('curso_id', $cursoId)
@@ -234,10 +189,6 @@ class AsistenciaController extends Controller
         }
     }
 
-    /**
-     * Asegurar que exista la inscripción del estudiante en el curso
-     * (se crea automáticamente al registrar su primera asistencia).
-     */
     private function asegurarInscripcion($estudianteId, $cursoId)
     {
         $inscripcion = DB::table('estudiante_curso')
@@ -257,38 +208,6 @@ class AsistenciaController extends Controller
         }
     }
 
-    /**
-     * Registrar asistencia rápida (para profesores desde la clase)
-     */
-    public function registrarRapido(Request $request)
-    {
-        $request->validate([
-            'clase_id' => 'required|exists:clases,id',
-            'estudiante_id' => 'required|exists:estudiantes,id',
-            'estado' => 'required|in:presente,ausente,tardanza,excusado',
-        ]);
-
-        $asistencia = Asistencia::updateOrCreate(
-            [
-                'clase_id' => $request->clase_id,
-                'estudiante_id' => $request->estudiante_id,
-            ],
-            // [
-            //     'estado' => $request->estado,
-            //     'hora_registro' => now(),
-            // ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Asistencia registrada',
-            'asistencia' => $asistencia
-        ]);
-    }
-
-    /**
-     * Obtener estadísticas de asistencias de un estudiante
-     */
     public function estadisticas($estudianteId)
     {
         $estudiante = Estudiante::findOrFail($estudianteId);

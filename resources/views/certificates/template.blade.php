@@ -1,91 +1,141 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Certificado de Finalización</title>
+
+    @php
+        // Convertir marco a Base64
+        $bgPath = public_path('images/certificate.png');
+        $bgBase64 = file_exists($bgPath) 
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($bgPath)) 
+            : null;
+
+        // Convertir logo a Base64
+        $logoBase64 = null;
+        if (!empty($logo_path) && file_exists($logo_path)) {
+            $type = pathinfo($logo_path, PATHINFO_EXTENSION);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode(file_get_contents($logo_path));
+        }
+    @endphp
+
     <style>
         @page {
-            margin: 0;
+            margin: 0px;
             size: a4 landscape;
         }
 
-        body {
-            font-family: 'Times-Roman', 'Georgia', serif;
-            margin: 0;
-            padding: 24px;
-            background-color: #fcfbf9;
+        html, body {
+            margin: 0px;
+            padding: 0px;
+            width: 100%;
+            height: 100%;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background-color: #ffffff;
             color: #1e293b;
         }
 
-        /* Marcos y Bordes Elegantes */
-        .outer-border {
-            border: 2px solid #c59b27;
-            padding: 8px;
-            height: 94%;
+        .page-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
         }
 
-        .inner-border {
-            border: 1px solid #c59b27;
-            padding: 25px 35px;
-            height: 92%;
+        /* Imagen de Fondo (Marco) */
+        .bg-frame {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Logo de la Plataforma */
+        .logo-container {
+            position: absolute;
+            top: 35px;
+            right: 50px;
+            width: 130px;
             text-align: center;
-            background-color: #ffffff;
-            position: relative;
+            z-index: 10;
+        }
+
+        .logo-img {
+            max-width: 110px;
+            max-height: 100px;
+        }
+
+        /* Contenido Central sobrepuesto */
+        .content-container {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            z-index: 5;
+            padding-top: 65px;
+            text-align: center;
         }
 
         /* Encabezados */
         .title {
-            font-size: 30px;
+            font-family: 'Times-Roman', 'Georgia', serif;
+            font-size: 40px;
             font-weight: bold;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             color: #0f172a;
             text-transform: uppercase;
-            margin-top: 15px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .sub-title {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 13px;
+            font-size: 11px;
+            font-weight: bold;
             color: #64748b;
-            margin-bottom: 25px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
         }
 
         /* Nombre del Estudiante */
         .student-name {
-            font-size: 38px;
+            font-family: 'Times-Roman', 'Georgia', serif;
+            font-size: 34px;
             font-weight: bold;
             color: #1e3a8a;
             text-transform: uppercase;
-            margin: 15px 0;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
         }
 
         .achievement-text {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             color: #475569;
-            margin-top: 15px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         /* Título del Curso */
+        .course-title-wrapper {
+            margin-bottom: 35px;
+        }
+
         .course-title {
-            font-size: 24px;
+            font-family: 'Times-Roman', 'Georgia', serif;
+            font-size: 22px;
             font-weight: bold;
             color: #b45309;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-            line-height: 1.3;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            border-bottom: 2px solid #b45309;
+            padding-bottom: 4px;
         }
 
         /* Tabla de Credenciales / Pie */
         .credentials-table {
-            width: 100%;
-            margin-top: 25px;
+            width: 82%;
+            margin: 0 auto;
             border-collapse: separate;
             border-spacing: 15px 0;
         }
@@ -96,46 +146,59 @@
             border-radius: 6px;
             padding: 10px 8px;
             text-align: center;
-            width: 33%;
+            width: 33.33%;
         }
 
         .box-label {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 9px;
+            font-size: 8px;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            letter-spacing: 0.8px;
             font-weight: bold;
+            margin-bottom: 4px;
         }
 
         .box-value {
-            font-family: 'Helvetica', 'Arial', sans-serif;
             font-size: 11px;
             color: #0f172a;
             font-weight: bold;
         }
     </style>
 </head>
+
 <body>
 
-    <div class="outer-border">
-        <div class="inner-border">
-            
-            <!-- Encabezado -->
+    <div class="page-container">
+
+        <!-- Marco en capa posterior -->
+            <img class="bg-frame" src="{{ public_path('images/certificate.png') }}" alt="Marco Certificado">
+
+            <!-- Logo de la Plataforma -->
+            <div class="logo-container">
+                @if(!empty($logo_path) && file_exists($logo_path))
+                <img src="{{ $logo_path }}" class="logo-img" alt="Logo">
+                @endif
+            </div>
+
+        <!-- Contenido dinámico -->
+        <div class="content-container">
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
             <div class="title">Certificado de Finalización</div>
             <div class="sub-title">Otorgado con distinción a:</div>
 
-            <!-- Nombre -->
             <div class="student-name">{{ $student_name }}</div>
 
-            <!-- Texto descriptivo -->
             <div class="achievement-text">Por haber completado con éxito el curso:</div>
-            
-            <!-- Nombre del Curso -->
-            <div class="course-title">{{ $course_title }}</div>
 
-            <!-- Cajas de Verificación (Pie de Página) -->
+            <div class="course-title-wrapper">
+                <span class="course-title">{{ $course_title }}</span>
+            </div>
+
             <table class="credentials-table">
                 <tr>
                     <td class="credential-box">
@@ -154,7 +217,9 @@
             </table>
 
         </div>
+
     </div>
 
 </body>
+
 </html>

@@ -23,7 +23,7 @@
                 <span id="notif-badge" class="badge badge-warning navbar-badge" style="display:none">0</span>
             </a>
 
-            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" id="notif-dropdown-menu">
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" id="notif-dropdown-menu" style="min-width: 320px; width: 340px;">
                 
                 <span class="dropdown-item dropdown-header" id="notif-header-count">
                     0 Notificaciones
@@ -31,14 +31,14 @@
                 <div class="dropdown-divider"></div>
 
                 
-                <div id="notif-list-container">
+                <div id="notif-list-container" style="max-height: 320px; overflow-y: auto;">
                     <span class="dropdown-item text-muted text-center" style="font-size:13px">
                         Sin notificaciones nuevas
                     </span>
                 </div>
 
                 <div class="dropdown-divider"></div>
-                <span class="dropdown-item dropdown-footer" id="notif-leidas-count">
+                <span class="dropdown-item dropdown-footer text-muted" id="notif-leidas-count">
                     0 Leídas
                 </span>
                 <div class="dropdown-divider"></div>
@@ -108,7 +108,6 @@
             const json = await res.json();
             renderBadge(json.count);
             renderList(json.items, json.read_count ?? 0);
-            showNewToasts(json.items);
         } catch (e) {}
     }
 
@@ -131,16 +130,18 @@
         if (l) l.textContent = readCount + ' Leídas';
         if (!c) return;
         if (!items.length) {
-            c.innerHTML = '<span class="dropdown-item text-muted text-center" style="font-size:13px">Sin notificaciones nuevas</span>';
+            c.innerHTML = '<span class="dropdown-item text-muted text-center py-3" style="font-size:13px">Sin notificaciones nuevas</span>';
             return;
         }
         c.innerHTML = items.map(n => `
-            <a href="#" class="dropdown-item" onclick="notifShowModal('${n.id}', event)">
-                <i class="fas fa-envelope mr-2"></i>
-                <span style="font-weight:600">${n.data.titulo}</span>
-                <span class="float-right text-muted text-sm">${n.created}</span>
+            <a href="#" class="dropdown-item d-flex flex-column align-items-start py-2" onclick="notifShowModal('${n.id}', event)" style="white-space: normal;">
+                <div class="d-flex w-100 align-items-center mb-1">
+                    <i class="fas fa-envelope mr-2 text-primary"></i>
+                    <span class="text-truncate font-weight-bold" style="max-width: 260px;" title="${n.data.titulo}">${n.data.titulo}</span>
+                </div>
+                <small class="text-muted text-nowrap align-self-end" style="font-size: 0.75rem;">${n.created}</small>
             </a>
-            <div class="dropdown-divider"></div>
+            <div class="dropdown-divider m-0"></div>
         `).join('');
     }
 
@@ -210,5 +211,4 @@
     setInterval(fetchUnread, POLL);
 })();
 </script>
-<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-<?php /**PATH C:\xampp\htdocs\www\Remanente-LMS-Re\resources\views/vendor/adminlte/partials/navbar/navbar.blade.php ENDPATH**/ ?>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?><?php /**PATH C:\xampp\htdocs\www\Remanente-LMS-Re\resources\views/vendor/adminlte/partials/navbar/navbar.blade.php ENDPATH**/ ?>

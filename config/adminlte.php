@@ -304,7 +304,7 @@ return [
             'can' => 'estudiante.menu-cursos',
         ],
         /* ================= CONFIGURACIÓN ================= */
-        ['header' => 'CONFIGURACIÓN', 'can' => 'admin.config.index'],
+['header' => 'CONFIGURACIÓN', 'can' => 'admin.config.index'],
         [
             'text' => 'Sistema',
             'icon' => 'fas fa-cogs',
@@ -326,6 +326,12 @@ return [
                     'icon' => 'fas fa-key',
                     'route' => 'admin.permissions.index',
                     'can' => 'permissions.index',
+                ],
+                [
+                    'text' => 'Ver como Rol',
+                    'icon' => 'fas fa-user-secret',
+                    'route' => 'admin.impersonate.index',
+                    'can' => 'admin.users.index', // O puedes usar 'impersonate.index' 
                 ],
                 [
                     'text' => 'Auditoría',

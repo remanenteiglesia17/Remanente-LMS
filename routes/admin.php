@@ -1,14 +1,15 @@
 <?php
 
-use App\Http\Controllers\Academico\Profesor\TareaController; 
-use App\Http\Controllers\Academico\Profesor\ModuloController as ProfesorModuloController;
-use App\Http\Controllers\Academico\Profesor\CalificacionController;
 use App\Http\Controllers\Academico\CursoController;
-
 use App\Http\Controllers\Academico\InscripcionController;
+use App\Http\Controllers\Academico\Profesor\CalificacionController;
+use App\Http\Controllers\Academico\Profesor\ModuloController as ProfesorModuloController;
+use App\Http\Controllers\Academico\Profesor\TareaController;
 use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\HorarioController;
+use App\Http\Controllers\Admin\ImpersonateController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
@@ -21,21 +22,17 @@ use App\Http\Controllers\ProfesorController;
 use App\Http\Controllers\SecretariaController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get("/", [HomeController::class, "index"])->name("home")->middleware('can:home');
 // RUTAS TOGGLE ACTIVATE / DEACTIVATE
 Route::patch('/estudiantes/{id}/toggle-status', [EstudianteController::class, 'toggleStatus'])->name('estudiantes.toggleStatus');
 Route::patch('/programador/{id}/toggle-status', [SecretariaController::class, 'toggleStatus'])->name('secretarias.toggleStatus');
 Route::patch('/profesor/{id}/toggle-status', [ProfesorController::class, 'toggleStatus'])->name('profesors.toggleStatus');
 Route::patch('/curso/{id}/toggle-status', [CursoController::class, 'toggleStatus'])->name('cursos.toggleStatus');
 
-// RUTAS ADMIN
-
 // RUTAS HOME
 Route::get('/', [HomeController::class, 'index'])->name('index')->middleware('auth');
 
-// RUTAS CONFIGURACIONES
+// RUTAS CONFIGURACIONES Y PERFIL
 Route::resource('/config', ConfigController::class)->names('config');
-/* CONFIG PROFILE  * */
 Route::get('/user/profile', [UserProfileController::class, 'index'])->name('profile.index');
 Route::put('/user/profile-information', [UserProfileController::class, 'update'])->name('user-profile-information.update');
 Route::put('/user/profile-password', [UserProfileController::class, 'updatePassword'])->name('user-profile-password.updatePassword');
@@ -43,10 +40,10 @@ Route::put('/user/profile-password', [UserProfileController::class, 'updatePassw
 // RUTAS SECRETARIAS
 Route::resource('/secretarias', SecretariaController::class)->names('secretarias');
 
-// RUTAS PROFESORES (->parameters) para usar profesores en ves de profesore
+// RUTAS PROFESORES
 Route::resource('/profesores', ProfesorController::class)->names('profesores')->parameters(['profesores' => 'profesor']);
 
-// RUTAS CLIENTES
+// RUTAS ESTUDIANTES
 Route::resource('/estudiantes', EstudianteController::class)->names('estudiantes');
 
 // RUTAS CURSOS
@@ -65,36 +62,29 @@ Route::get('/cursos/mi-curso', function () {
 
 Route::resource('/cursos', CursoController::class)->names('cursos');
 
-// RUTAS para profesores
-Route::get('/profesor/asistencia', [AsistenciaController::class, 'index'])->name('asistencias.index');
-Route::post('/asistencia/registrar', [AsistenciaController::class, 'store'])->name('asistencias.store');
+// ============================================
+// MÓDULO DE ASISTENCIAS (UNIFICADO Y CORREGIDO)
+// ============================================
+Route::prefix('asistencias')->name('asistencias.')->middleware('auth')->group(function () {
+    Route::get('/', [AsistenciaController::class, 'index'])->name('index');
+    Route::post('/', [AsistenciaController::class, 'store'])->name('store');
+    Route::post('/excusar/{asistenciaId}', [AsistenciaController::class, 'excusar'])->name('excusar');
+    Route::get('/estadisticas/{estudianteId}', [AsistenciaController::class, 'estadisticas'])->name('estadisticas');
+});
 
-// RUTAS SECRETARIAS
-Route::get('/secretaria/inasistencias', [AsistenciaController::class, 'show'])->name('secretarias.inasistencias');
-Route::post('/asistencia/habilitar/{id}', [AsistenciaController::class, 'habilitarEstudiante'])->name('asistencia.habilitar');
-
-// RUTAS HORARIOS ADMIN
+// RUTAS HORARIOS ADMIN Y ESTUDIANTE
 Route::resource('/horarios', HorarioController::class)->names('horarios');
 Route::get('/horarios/curso/{id}', [HorarioController::class, 'show_datos_cursos'])->name('horarios.show_datos_cursos');
-// Agregar ANTES de la ruta existente
-Route::get('/horarios/curso/{id}/datos', [HorarioController::class, 'show_datos_por_curso'])
-    ->name('horarios.show_datos_por_curso');
-    
-// RUTAS HORARIOS STUDENT ver sus reservas
-Route::get('/horarios/show_reserva_profesores',
-    [HomeController::class, 'show_reserva_profesores'])
-                                                ->name('horarios.show_reserva_profesores');
+Route::get('/horarios/curso/{id}/datos', [HorarioController::class, 'show_datos_por_curso'])->name('horarios.show_datos_por_curso');
+Route::get('/horarios/show_reserva_profesores', [HomeController::class, 'show_reserva_profesores'])->name('horarios.show_reserva_profesores');
 
-// RUTAS CLASES (creación/edición/eliminación desde el listado de reservas)
+// RUTAS CLASES
 Route::post('/clases', [ClaseController::class, 'store'])->name('clases.store');
 Route::get('/clases/{clase}/edit', [ClaseController::class, 'edit'])->name('clases.edit');
 Route::put('/clases/{clase}', [ClaseController::class, 'update'])->name('clases.update');
 Route::delete('/clases/{clase}', [ClaseController::class, 'destroy'])->name('clases.destroy');
-Route::get('horarios/getCurso/{id}', [HorarioController::class, 'getCursosPorProfesor'])
-    ->name('horarios.getCurso');
-Route::get('inscripciones/get-profesores/{cursoId}', [InscripcionController::class, 'getProfesoresPorCurso'])
-    ->name('inscripciones.get_profesores');
-// RUTAS HORARIOS TEACHER ver quien tiene una reserva con el
+Route::get('horarios/getCurso/{id}', [HorarioController::class, 'getCursosPorProfesor'])->name('horarios.getCurso');
+Route::get('inscripciones/get-profesores/{cursoId}', [InscripcionController::class, 'getProfesoresPorCurso'])->name('inscripciones.get_profesores');
 Route::get('/show_reservas/{id}', [HomeController::class, 'show_reservas'])->name('show_reservas');
 
 // ============================================
@@ -103,28 +93,29 @@ Route::get('/show_reservas/{id}', [HomeController::class, 'show_reservas'])->nam
 Route::resource('inscripciones', InscripcionController::class)->except(['show']);
 
 Route::prefix('inscripciones')->name('inscripciones.')->group(function () {
-    Route::post('multiple', [InscripcionController::class, 'storeMultiple'])->name('store-multiple'); // Inscripción masiva
-    Route::patch('{id}/estado', [InscripcionController::class, 'cambiarEstado'])->name('cambiar-estado');// inscripcion // Cambiar estado de inscripción
-    Route::get('curso/{curso}', [InscripcionController::class, 'estudiantesPorCurso'])->name('estudiantes'); // Ver estudiantes de un curso
-    Route::get('estudiante/{estudiante}', [InscripcionController::class, 'cursosPorEstudiante'])->name('cursos'); // Ver cursos de un estudiante
-    Route::delete('{id}', [InscripcionController::class, 'destroy'])->name('destroy'); // Eliminar inscripción
+    Route::post('multiple', [InscripcionController::class, 'storeMultiple'])->name('store-multiple');
+    Route::patch('{id}/estado', [InscripcionController::class, 'cambiarEstado'])->name('cambiar-estado');
+    Route::get('curso/{curso}', [InscripcionController::class, 'estudiantesPorCurso'])->name('estudiantes');
+    Route::get('estudiante/{estudiante}', [InscripcionController::class, 'cursosPorEstudiante'])->name('cursos');
+    Route::delete('{id}', [InscripcionController::class, 'destroy'])->name('destroy');
 });
-// RUTAS para desplegar select
+
+// RUTAS DE APOYO/SELECTS DINÁMICOS
 Route::get('/profesores/evento/{cursoId}', [ProfesorController::class, 'obtenerProfesores'])->name('obtenerProfesores');
 Route::get('/cursos/evento/{estudianteId}', [CursoController::class, 'obtenerCursos'])->name('obtenerCursos');
-Route::get('/estudiantes/{estudiante}/inscripciones',[InscripcionController::class, 'cursosPorEstudiante']
-)->name('estudiantes.inscripciones');
+Route::get('/estudiantes/{estudiante}/inscripciones', [InscripcionController::class, 'cursosPorEstudiante'])->name('estudiantes.inscripciones');
 
-// // Route::resource('/profesor/tareas', TareaController::class)->except(['destroy'])->names('admin.profesor.tareas');
-// // ✅ OPCIÓN 2: Definir rutas manualmente
+// ============================================
+// MÓDULO PROFESOR (Tareas, Módulos, Calificaciones)
+// ============================================
 Route::prefix('profesor/tareas')->middleware(['auth', 'role:profesor'])->name('profesor.tareas.')->group(function () {
-    Route::get('/', [TareaController::class, 'index'])->name('index');           // GET  /profesor/tareas
-    Route::get('/create', [TareaController::class, 'create'])->name('create');   // GET  /profesor/tareas/create
-    Route::post('/', [TareaController::class, 'store'])->name('store');          // POST /profesor/tareas
-    Route::get('/{tarea}', [TareaController::class, 'show'])->name('show');      // GET  /profesor/tareas/{id}
-    Route::get('/{tarea}/edit', [TareaController::class, 'edit'])->name('edit'); // GET  /profesor/tareas/{id}/edit
-    Route::put('/{tarea}', [TareaController::class, 'update'])->name('update');  // PUT  /profesor/tareas/{id}
-    Route::delete('/{tarea}', [TareaController::class, 'destroy'])->name('destroy'); 
+    Route::get('/', [TareaController::class, 'index'])->name('index');
+    Route::get('/create', [TareaController::class, 'create'])->name('create');
+    Route::post('/', [TareaController::class, 'store'])->name('store');
+    Route::get('/{tarea}', [TareaController::class, 'show'])->name('show');
+    Route::get('/{tarea}/edit', [TareaController::class, 'edit'])->name('edit');
+    Route::put('/{tarea}', [TareaController::class, 'update'])->name('update');
+    Route::delete('/{tarea}', [TareaController::class, 'destroy'])->name('destroy');
 });
 
 Route::prefix('profesor/modulos')->middleware(['auth', 'role:profesor'])->name('profesor.modulos.')->group(function () {
@@ -136,31 +127,25 @@ Route::prefix('profesor/modulos')->middleware(['auth', 'role:profesor'])->name('
 });
 
 Route::get('profesor/calificaciones/visual', function () {
-    return view('profesor.calificaciones.visual');})->name('profesor.calificaciones.visual');
+    return view('profesor.calificaciones.visual');
+})->name('profesor.calificaciones.visual');
 
-// Rutas para PROFESORES - Calificaciones
-Route::post('/profesor/calificaciones/finalizar-curso', [\App\Http\Controllers\Academico\Profesor\CalificacionController::class, 'finalizarCurso'])
+Route::post('/profesor/calificaciones/finalizar-curso', [CalificacionController::class, 'finalizarCurso'])
     ->middleware(['auth', 'role:profesor'])
     ->name('profesor.calificaciones.finalizar-curso');
 
 Route::prefix('profesor/calificaciones')->middleware(['auth', 'role:profesor'])->name('profesor.calificaciones.')->group(function () {
-    Route::get('/', [CalificacionController::class, 'index'])->name('index');                                                           // Ver todas las calificaciones de sus cursos
-    // Route::get('/curso/{curso}', [CalificacionController::class, 'porCurso'])->name('por-curso');                                       // Ver calificaciones de un curso específico
-    // Route::get('/estudiante/{estudiante}/curso/{curso}', [CalificacionController::class, 'porEstudiante'])->name('por-estudiante');     // Ver calificaciones de un estudiante en un curso
-    Route::post('/registrar', [CalificacionController::class, 'store'])->name('store'); 
+    Route::get('/', [CalificacionController::class, 'index'])->name('index');
+    Route::post('/registrar', [CalificacionController::class, 'store'])->name('store');
     Route::post('/planilla', [CalificacionController::class, 'guardarPlanilla'])->name('planilla');
-    Route::get('/{entrega}/revision', [CalificacionController::class, 'revision'])->name('revision');                                                // Crear/actualizar calificación
-    // Route::get('/{calificacion}/editar', [CalificacionController::class, 'edit'])->name('edit');
-    // Route::put('/{calificacion}', [CalificacionController::class, 'update'])->name('update');
-
-    // Route::post('/masiva', [CalificacionController::class, 'storeMasiva'])->name('store-masiva');                                       // Calificar múltiples estudiantes a la vez
-    // Route::patch('/{calificacion}/publicar', [CalificacionController::class, 'publicar'])->name('publicar');                            // Publicar/Ocultar calificaciones para estudiantes
-    // Route::get('/exportar/curso/{curso}', [CalificacionController::class, 'exportar'])->name('exportar');                               // Exportar calificaciones
-    Route::get('/estadisticas/curso/{curso}', [CalificacionController::class, 'estadisticas'])->name('estadisticas');                   // Estadísticas de calificaciones por curso
+    Route::get('/{entrega}/revision', [CalificacionController::class, 'revision'])->name('revision');
+    Route::get('/estadisticas/curso/{curso}', [CalificacionController::class, 'estadisticas'])->name('estadisticas');
 });
 
+// ============================================
+// MÓDULO ADMINISTRACIÓN Y AUDITORÍA
+// ============================================
 Route::middleware('auth')->group(function () {
-    // PERMISIONS ROUTE
     Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
     Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
     Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
@@ -168,38 +153,19 @@ Route::middleware('auth')->group(function () {
     Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
     Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
 
-    Route::resource('roles', RoleController::class)->names('roles'); // ROLES ROUTES
+    Route::resource('roles', RoleController::class)->names('roles');
+    Route::resource('/users', UserController::class)->names('users');
+    Route::patch('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
 
-    Route::resource('/users', UserController::class)->names('users'); // USERS ROUTES
-    Route::patch('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'    ])->name('users.toggleStatus');
-
-    // AUDITORÍA: bitácora de creación/edición/eliminación e inicios de sesión
     Route::get('/auditorias', [AuditoriaController::class, 'index'])->name('auditorias.index');
     Route::get('/auditorias/{auditoria}', [AuditoriaController::class, 'show'])->name('auditorias.show');
 });
 
-
-
-// //RUTAS REPORTES PROFESORES ADMIN
-// /*NO INCLUDO */
-// Route::get('/profesores/pdf/{id}', [ProfesorController::class, 'reportes'])->name('profesores.pdf');
-// /*NO INCLUDO */
-// Route::get('/profesores/reportes', [ProfesorController::class, 'reportes'])->name('profesores.reportes')->middleware('auth', 'can:profesores.reportes');
-
-// //RUTAS para las reservas
-// /*NO INCLUDO */
-// Route::get('/reservas/reportes', [ClaseController::class, 'reportes'])->name('reservas.reportes')->middleware('auth', 'can:reservas.reportes');
-// /*NO INCLUDO */
-// Route::get('/reservas/pdf/{id}', [ClaseController::class, 'pdf'])->name('reservas.pdf')->middleware('auth', 'can:reservas.pdf');
-// /*NO INCLUDO */
-// Route::get('/reservas/pdf_fechas', [ClaseController::class, 'pdf_fechas'])->name('reservas.pdf_fechas')->middleware('auth', 'can:event.pdf_fechas');
-
-// ========== NOTIFICACIONES (admin) ==========
-use App\Http\Controllers\Admin\NotificationController;
-Route::get('/notifications',        [NotificationController::class, 'index'])->name('notifications.index');
+// NOTIFICACIONES
+Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 Route::get('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 
-// ========== VER PLATAFORMA COMO ESTUDIANTE (impersonación) ==========
-use App\Http\Controllers\Admin\ImpersonateController;
-Route::get('/impersonate/estudiante/{estudiante}', [ImpersonateController::class, 'verComoEstudiante'])->name('impersonate.estudiante');
+// IMPERSONACIÓN
+Route::get('/impersonate', [ImpersonateController::class, 'index'])->name('impersonate.index');
+Route::get('/impersonate/rol/{rol}', [ImpersonateController::class, 'verComoRol'])->name('impersonate.rol');
 Route::get('/impersonate/detener', [ImpersonateController::class, 'detener'])->name('impersonate.detener');
